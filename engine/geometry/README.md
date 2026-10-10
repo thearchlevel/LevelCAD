@@ -1,0 +1,3 @@
+# engine/geometry
+
+Reserved for a future LevelCAD module. No functionality is implemented here yet.

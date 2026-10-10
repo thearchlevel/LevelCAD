@@ -1,0 +1,11 @@
+﻿<RCC>
+  <qresource prefix="/kicad">
+    <file alias="Device.kicad_sym">Device.kicad_sym</file>
+    <file alias="Transistor_BJT.kicad_sym">Transistor_BJT.kicad_sym</file>
+    <file alias="Transistor_FET.kicad_sym">Transistor_FET.kicad_sym</file>
+    <file alias="Connector_Generic.kicad_sym">Connector_Generic.kicad_sym</file>
+    <file alias="Regulator_Linear.kicad_sym">Regulator_Linear.kicad_sym</file>
+    <file alias="Timer.kicad_sym">Timer.kicad_sym</file>
+    <file alias="LICENSE.md">LICENSE.md</file>
+  </qresource>
+</RCC>

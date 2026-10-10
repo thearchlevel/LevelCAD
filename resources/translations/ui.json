@@ -1,0 +1,534 @@
+{
+  "&Arquivo": [
+    "&File",
+    "&Archivo"
+  ],
+  "&Novo": [
+    "&New",
+    "&Nuevo"
+  ],
+  "&Abrir...": [
+    "&Open...",
+    "&Abrir..."
+  ],
+  "&Salvar": [
+    "&Save",
+    "&Guardar"
+  ],
+  "Salvar &como...": [
+    "Save &as...",
+    "Guardar &como..."
+  ],
+  "Arquivos recentes": [
+    "Recent files",
+    "Archivos recientes"
+  ],
+  "Importar biblioteca de simbolos...": [
+    "Import symbol library...",
+    "Importar biblioteca de simbolos..."
+  ],
+  "Exportar": [
+    "Export",
+    "Exportar"
+  ],
+  "Lista de materiais (CSV)": [
+    "Bill of materials (CSV)",
+    "Lista de materiales (CSV)"
+  ],
+  "Netlist de conexoes (JSON)": [
+    "Connectivity netlist (JSON)",
+    "Netlist de conexiones (JSON)"
+  ],
+  "Netlist SPICE (.cir)": [
+    "SPICE netlist (.cir)",
+    "Netlist SPICE (.cir)"
+  ],
+  "Esquematico (PDF)": [
+    "Schematic (PDF)",
+    "Esquema (PDF)"
+  ],
+  "Sair": [
+    "Exit",
+    "Salir"
+  ],
+  "&Editar": [
+    "&Edit",
+    "&Editar"
+  ],
+  "Desfazer": [
+    "Undo",
+    "Deshacer"
+  ],
+  "Refazer": [
+    "Redo",
+    "Rehacer"
+  ],
+  "Excluir selecao": [
+    "Delete selection",
+    "Eliminar seleccion"
+  ],
+  "Duplicar selecao": [
+    "Duplicate selection",
+    "Duplicar seleccion"
+  ],
+  "Girar 90 deg": [
+    "Rotate 90 deg",
+    "Girar 90 deg"
+  ],
+  "Propriedades...": [
+    "Properties...",
+    "Propiedades..."
+  ],
+  "&Visualizar": [
+    "&View",
+    "&Ver"
+  ],
+  "Ajustar desenho": [
+    "Fit drawing",
+    "Ajustar dibujo"
+  ],
+  "Zoom original": [
+    "Reset zoom",
+    "Restablecer zoom"
+  ],
+  "Mostrar grade": [
+    "Show grid",
+    "Mostrar cuadricula"
+  ],
+  "Ajustar a grade": [
+    "Snap to grid",
+    "Ajustar a la cuadricula"
+  ],
+  "&Circuito": [
+    "&Circuit",
+    "&Circuito"
+  ],
+  "Verificar circuito (Electrical Connectivity Engine)": [
+    "Check circuit (Electrical Connectivity Engine)",
+    "Verificar circuito (Electrical Connectivity Engine)"
+  ],
+  "&Ajuda": [
+    "&Help",
+    "&Ayuda"
+  ],
+  "Sobre o LevelCAD": [
+    "About LevelCAD",
+    "Acerca de LevelCAD"
+  ],
+  "Creditos da biblioteca": [
+    "Library credits",
+    "Creditos de la biblioteca"
+  ],
+  "Creditos e licenca da biblioteca": [
+    "Library credits and license",
+    "Creditos y licencia de la biblioteca"
+  ],
+  "Ferramentas": [
+    "Tools",
+    "Herramientas"
+  ],
+  "Selecionar": [
+    "Select",
+    "Seleccionar"
+  ],
+  "Ligacao": [
+    "Connection",
+    "Conexion"
+  ],
+  "Ligacoes": [
+    "Connections",
+    "Conexiones"
+  ],
+  "Biblioteca de componentes": [
+    "Component library",
+    "Biblioteca de componentes"
+  ],
+  "Buscar componente...": [
+    "Search component...",
+    "Buscar componente..."
+  ],
+  "Resistor": [
+    "Resistor",
+    "Resistencia"
+  ],
+  "Capacitor": [
+    "Capacitor",
+    "Condensador"
+  ],
+  "Terra (GND)": [
+    "Ground (GND)",
+    "Tierra (GND)"
+  ],
+  "Terra": [
+    "Ground",
+    "Tierra"
+  ],
+  "Indutor": [
+    "Inductor",
+    "Inductor"
+  ],
+  "Diodo": [
+    "Diode",
+    "Diodo"
+  ],
+  "Fonte de tensao": [
+    "Voltage source",
+    "Fuente de tension"
+  ],
+  "Fonte de corrente": [
+    "Current source",
+    "Fuente de corriente"
+  ],
+  "Chave SPST": [
+    "SPST switch",
+    "Interruptor SPST"
+  ],
+  "Conector 2 pinos": [
+    "2-pin connector",
+    "Conector de 2 pines"
+  ],
+  "Objetos do projeto": [
+    "Project objects",
+    "Objetos del proyecto"
+  ],
+  "Referencia": [
+    "Reference",
+    "Referencia"
+  ],
+  "Valor / tipo": [
+    "Value / type",
+    "Valor / tipo"
+  ],
+  "Guia e creditos": [
+    "Guide and credits",
+    "Guia y creditos"
+  ],
+  "Componentes": [
+    "Components",
+    "Componentes"
+  ],
+  "Conexao": [
+    "Connection",
+    "Conexion"
+  ],
+  "Redes eletricas": [
+    "Electrical nets",
+    "Redes electricas"
+  ],
+  "Pino": [
+    "Pin",
+    "Pin"
+  ],
+  "Sem titulo": [
+    "Untitled",
+    "Sin titulo"
+  ],
+  "Alteracoes nao salvas": [
+    "Unsaved changes",
+    "Cambios sin guardar"
+  ],
+  "Deseja salvar as alteracoes antes de continuar?": [
+    "Save your changes before continuing?",
+    "Desea guardar los cambios antes de continuar?"
+  ],
+  "Abrir esquematico": [
+    "Open schematic",
+    "Abrir esquema"
+  ],
+  "Salvar esquematico": [
+    "Save schematic",
+    "Guardar esquema"
+  ],
+  "Falha ao abrir": [
+    "Could not open",
+    "No se pudo abrir"
+  ],
+  "Falha ao salvar": [
+    "Could not save",
+    "No se pudo guardar"
+  ],
+  "Falha na exportacao": [
+    "Export failed",
+    "Error de exportacion"
+  ],
+  "Falha na importacao": [
+    "Import failed",
+    "Error de importacion"
+  ],
+  "Falha ao carregar biblioteca": [
+    "Could not load library",
+    "No se pudo cargar la biblioteca"
+  ],
+  "Esquematico salvo": [
+    "Schematic saved",
+    "Esquema guardado"
+  ],
+  "Exportar PDF": [
+    "Export PDF",
+    "Exportar PDF"
+  ],
+  "PDF exportado": [
+    "PDF exported",
+    "PDF exportado"
+  ],
+  "Exportar lista de materiais": [
+    "Export bill of materials",
+    "Exportar lista de materiales"
+  ],
+  "Lista de materiais exportada": [
+    "Bill of materials exported",
+    "Lista de materiales exportada"
+  ],
+  "Exportar netlist": [
+    "Export netlist",
+    "Exportar netlist"
+  ],
+  "Netlist exportada": [
+    "Netlist exported",
+    "Netlist exportada"
+  ],
+  "Corrija o circuito antes de exportar SPICE": [
+    "Fix the circuit before exporting SPICE",
+    "Corrija el circuito antes de exportar SPICE"
+  ],
+  "Exportar circuito SPICE": [
+    "Export SPICE circuit",
+    "Exportar circuito SPICE"
+  ],
+  "SPICE exportado com avisos": [
+    "SPICE exported with warnings",
+    "SPICE exportado con advertencias"
+  ],
+  "SPICE exportado - abra o .cir no simulador externo": [
+    "SPICE exported - open the .cir in an external simulator",
+    "SPICE exportado - abra el .cir en un simulador externo"
+  ],
+  "Importar biblioteca de simbolos": [
+    "Import symbol library",
+    "Importar biblioteca de simbolos"
+  ],
+  "Importacao concluida": [
+    "Import completed",
+    "Importacion completada"
+  ],
+  "Propriedades do componente": [
+    "Component properties",
+    "Propiedades del componente"
+  ],
+  "Biblioteca": [
+    "Library",
+    "Biblioteca"
+  ],
+  "Footprint sugerido": [
+    "Suggested footprint",
+    "Huella sugerida"
+  ],
+  "Valor / modelo": [
+    "Value / model",
+    "Valor / modelo"
+  ],
+  "Rotacao": [
+    "Rotation",
+    "Rotacion"
+  ],
+  "Propriedades invalidas": [
+    "Invalid properties",
+    "Propiedades invalidas"
+  ],
+  "Recuperar trabalho": [
+    "Recover work",
+    "Recuperar trabajo"
+  ],
+  "Existe uma copia de recuperacao. Deseja abri-la?": [
+    "A recovery copy is available. Open it?",
+    "Existe una copia de recuperacion. Desea abrirla?"
+  ],
+  "Falha na recuperacao": [
+    "Recovery failed",
+    "Error de recuperacion"
+  ],
+  "Copia de recuperacao atualizada": [
+    "Recovery copy updated",
+    "Copia de recuperacion actualizada"
+  ],
+  "Erro": [
+    "Error",
+    "Error"
+  ],
+  "Aviso": [
+    "Warning",
+    "Advertencia"
+  ],
+  "Nenhum problema encontrado nas verificacoes disponiveis.": [
+    "No issues found in the available checks.",
+    "No se encontraron problemas en las comprobaciones disponibles."
+  ],
+  "Duplo clique para localizar o objeto no desenho.": [
+    "Double-click to locate the object in the drawing.",
+    "Doble clic para localizar el objeto en el dibujo."
+  ],
+  "Janelas": [
+    "Windows",
+    "Ventanas"
+  ],
+  "Paineis laterais": [
+    "Side panels",
+    "Paneles laterales"
+  ],
+  "Gerenciar janelas...": [
+    "Manage windows...",
+    "Administrar ventanas..."
+  ],
+  "Gerenciador de janelas": [
+    "Window manager",
+    "Administrador de ventanas"
+  ],
+  "Restaurar layout": [
+    "Restore layout",
+    "Restaurar disposicion"
+  ],
+  "Mostrar todos os paineis": [
+    "Show all panels",
+    "Mostrar todos los paneles"
+  ],
+  "Organizar lado a lado": [
+    "Tile windows",
+    "Organizar ventanas"
+  ],
+  "Organizar em cascata": [
+    "Cascade windows",
+    "Organizar en cascada"
+  ],
+  "Usar abas": [
+    "Use tabs",
+    "Usar pestanas"
+  ],
+  "Esquematico": [
+    "Schematic",
+    "Esquema"
+  ],
+  "Esquematico 3D": [
+    "3D schematic",
+    "Esquema 3D"
+  ],
+  "PCB 3D": [
+    "3D PCB",
+    "PCB 3D"
+  ],
+  "Idiomas": [
+    "Languages",
+    "Idiomas"
+  ],
+  "Sincronizar PCB com esquematico": [
+    "Sync PCB with schematic",
+    "Sincronizar PCB con esquema"
+  ],
+  "Ferramentas PCB": [
+    "PCB tools",
+    "Herramientas PCB"
+  ],
+  "Selecionar / mover": [
+    "Select / move",
+    "Seleccionar / mover"
+  ],
+  "Rotear trilha": [
+    "Route track",
+    "Rutear pista"
+  ],
+  "Camada superior": [
+    "Top layer",
+    "Capa superior"
+  ],
+  "Camada inferior": [
+    "Bottom layer",
+    "Capa inferior"
+  ],
+  "Salvar PCB": [
+    "Save PCB",
+    "Guardar PCB"
+  ],
+  "Abrir PCB": [
+    "Open PCB",
+    "Abrir PCB"
+  ],
+  "Configuracao da placa": [
+    "Board settings",
+    "Configuracion de la placa"
+  ],
+  "Verificacao da placa": [
+    "Board checks",
+    "Verificacion de la placa"
+  ],
+  "Ajustar placa": [
+    "Fit board",
+    "Ajustar placa"
+  ],
+  "Redes diferentes": [
+    "Different nets",
+    "Redes diferentes"
+  ],
+  "Essa ligacao uniria redes diferentes. Escolha um pad da mesma rede.": [
+    "This would short different nets. Choose a pad on the same net.",
+    "Esta conexion uniria redes diferentes. Elija un pad de la misma red."
+  ],
+  "Propriedades do footprint": [
+    "Footprint properties",
+    "Propiedades de la huella"
+  ],
+  "Largura": [
+    "Width",
+    "Anchura"
+  ],
+  "Comprimento": [
+    "Length",
+    "Longitud"
+  ],
+  "Altura": [
+    "Height",
+    "Altura"
+  ],
+  "Altura 3D": [
+    "3D height",
+    "Altura 3D"
+  ],
+  "Espessura": [
+    "Thickness",
+    "Espesor"
+  ],
+  "Separacao minima": [
+    "Minimum clearance",
+    "Separacion minima"
+  ],
+  "Footprint generico com pads passantes. Confira o encapsulamento antes de fabricar.": [
+    "Generic through-hole footprint. Verify the package before manufacturing.",
+    "Huella generica con pads pasantes. Verifique el encapsulado antes de fabricar."
+  ],
+  "Exportar modelo 3D": [
+    "Export 3D model",
+    "Exportar modelo 3D"
+  ],
+  "Restaurar camera": [
+    "Reset camera",
+    "Restablecer camara"
+  ],
+  "Selecionar componente": [
+    "Select component",
+    "Seleccionar componente"
+  ],
+  "Clique em um componente na vista 3D antes de editar sua altura.": [
+    "Click a component in the 3D view before editing its height.",
+    "Seleccione un componente en la vista 3D antes de editar su altura."
+  ],
+  "Arraste para girar / roda para zoom / botao do meio para deslocar / duplo clique restaura": [
+    "Drag to rotate / wheel to zoom / middle button to pan / double-click to reset",
+    "Arrastre para girar / rueda para zoom / boton central para desplazar / doble clic para restaurar"
+  ],
+  "Modelo 3D da placa / selecione um componente para editar a altura": [
+    "3D board model / select a component to edit its height",
+    "Modelo 3D de la placa / seleccione un componente para editar la altura"
+  ],
+  "Esquematico em 3D / visualizacao espacial das conexoes": [
+    "3D schematic / spatial view of connections",
+    "Esquema 3D / vista espacial de conexiones"
+  ]
+}

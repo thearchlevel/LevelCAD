@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {"name": "desktop-debug", "displayName": "Desktop Debug", "generator": "Ninja", "binaryDir": "${sourceDir}/build/debug", "cacheVariables": {"CMAKE_BUILD_TYPE": "Debug", "LEVELCAD_BUILD_DESKTOP": "ON"}},
+    {"name": "core-debug", "displayName": "Core Only", "generator": "Ninja", "binaryDir": "${sourceDir}/build/core", "cacheVariables": {"CMAKE_BUILD_TYPE": "Debug", "LEVELCAD_BUILD_DESKTOP": "OFF"}}
+  ],
+  "buildPresets": [{"name":"desktop-debug","configurePreset":"desktop-debug"},{"name":"core-debug","configurePreset":"core-debug"}],
+  "testPresets": [{"name":"core-debug","configurePreset":"core-debug","output":{"outputOnFailure":true}}]
+}

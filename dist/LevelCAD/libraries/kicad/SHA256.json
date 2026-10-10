@@ -1,0 +1,26 @@
+﻿[
+    {
+        "File":  "Connector_Generic.kicad_sym",
+        "Hash":  "C44A0A561694B37A58027539B4E215067F64B5789CD7855BC001890DC484D51B"
+    },
+    {
+        "File":  "Device.kicad_sym",
+        "Hash":  "972F851EBF7C10DFE97EEFD5D847406154B18EE6158013BD19165477D6364ABD"
+    },
+    {
+        "File":  "Regulator_Linear.kicad_sym",
+        "Hash":  "C6D132304523AFFBE7EAC675D586D52951EA306EF85DACD7D8A3A2CE3B0F8814"
+    },
+    {
+        "File":  "Timer.kicad_sym",
+        "Hash":  "25080CFD12EE33EBDB4C81BB9AC4745F7B1E9D7E4A7E083E0D7F160A8D42207F"
+    },
+    {
+        "File":  "Transistor_BJT.kicad_sym",
+        "Hash":  "1A7F94AD29D11B76741438A35EF39E1979196297D0A5E68F7444BFE03447946E"
+    },
+    {
+        "File":  "Transistor_FET.kicad_sym",
+        "Hash":  "3FD8C031C23F7AB45B7773A9B88400F191E93BD9FFF19A5E11A132A3C09E16F6"
+    }
+]
