@@ -1,552 +1,622 @@
 [
-  {
-    "id": "LED5MM.STL",
-    "file": "LED5MM.STL",
-    "source": "production_parts/opto/LED5MM/LED5MM.STL",
-    "sha256": "223A64721B67F0971832564717D729761A02CAE49F58248A48988AD16DAC11E3",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 8066,
-    "bounds": [
-      [
-        0.0,
-        35.599998474121094
-      ],
-      [
-        0.005316687747836113,
-        5.450000286102295
-      ],
-      [
-        0.003752531483769417,
-        5.896247863769531
-      ]
-    ]
-  },
-  {
-    "id": "LED-0603.stl",
-    "file": "LED-0603.stl",
-    "source": "production_parts/opto/LED_0603/LED-0603.stl",
-    "sha256": "E5C32AC6E3969BB7E1A007D59356B7DDB9772AC4CB53773917B34EDB834E56B5",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 46,
-    "bounds": [
-      [
-        -0.7999999999999955,
-        0.7999999999999955
-      ],
-      [
-        -0.3999999999999988,
-        0.3999999999999985
-      ],
-      [
-        0.0,
-        0.45
-      ]
-    ]
-  },
-  {
-    "id": "WS2812B.STL",
-    "file": "WS2812B.STL",
-    "source": "production_parts/opto/WS2812B/stl/WS2812B.STL",
-    "sha256": "8EF33482044D455F198E2E47506763405F37866A3F365BABB899D7383F632D0B",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 442,
-    "bounds": [
-      [
-        0.0,
-        5.398499965667725
-      ],
-      [
-        0.0,
-        1.649999976158142
-      ],
-      [
-        0.0,
-        5.0
-      ]
-    ]
-  },
-  {
-    "id": "0402-CAP.stl",
-    "file": "0402-CAP.stl",
-    "source": "production_parts/passive/ceramic_smd/0402/0402-CAP.stl",
-    "sha256": "BCF3A2501353F16C8672E1A0D1A5B997238276F3F7E58338743D0D4FD9429919",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 60,
-    "bounds": [
-      [
-        -0.5000000000000021,
-        0.5
-      ],
-      [
-        -0.2899999999999997,
-        0.2899999999999998
-      ],
-      [
-        0.0,
-        0.45000000000000007
-      ]
-    ]
-  },
-  {
-    "id": "0603-CAP.stl",
-    "file": "0603-CAP.stl",
-    "source": "production_parts/passive/ceramic_smd/0603/0603-CAP.stl",
-    "sha256": "7A6132B982B918669505727E7C642A96ED7C3B41BBA587E237C2CF774562BD8C",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 48,
-    "bounds": [
-      [
-        -0.8,
-        0.8000000000000002
-      ],
-      [
-        -0.4,
-        0.4
-      ],
-      [
-        0.0,
-        0.45
-      ]
-    ]
-  },
-  {
-    "id": "0805-CAP.stl",
-    "file": "0805-CAP.stl",
-    "source": "production_parts/passive/ceramic_smd/0805/0805-CAP.stl",
-    "sha256": "61D423803215AFCB169B72230F8B4D63DCB4502AA2F6E052B83D8BBC5CA673DA",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 32,
-    "bounds": [
-      [
-        -1.04,
-        1.0399999999999998
-      ],
-      [
-        -0.635,
-        0.6350000000000001
-      ],
-      [
-        0.0,
-        1.27
-      ]
-    ]
-  },
-  {
-    "id": "1206-CAP.stl",
-    "file": "1206-CAP.stl",
-    "source": "production_parts/passive/ceramic_smd/1206/1206-CAP.stl",
-    "sha256": "E9E4FD256FC71AA17D1060108FC253403EFAE83C49EA0582E4A1F8CAB5663372",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 28,
-    "bounds": [
-      [
-        -1.5999999999999999,
-        1.6000000000000005
-      ],
-      [
-        -0.8,
-        0.8
-      ],
-      [
-        0.0,
-        1.25
-      ]
-    ]
-  },
-  {
-    "id": "0402-RES.stl",
-    "file": "0402-RES.stl",
-    "source": "production_parts/passive/resistors/0402/0402-RES.stl",
-    "sha256": "14C5A5E1CDF1A55AECE529C10B30F01FA40C89A6A86D41C00D96BC330B147900",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 60,
-    "bounds": [
-      [
-        -0.5000000000000021,
-        0.5
-      ],
-      [
-        -0.2899999999999997,
-        0.2899999999999998
-      ],
-      [
-        0.0,
-        0.45000000000000007
-      ]
-    ]
-  },
-  {
-    "id": "0603-RES.stl",
-    "file": "0603-RES.stl",
-    "source": "production_parts/passive/resistors/0603/0603-RES.stl",
-    "sha256": "DB7D3A7E75821C3A71BA8B250F4EF96B053997C795603C24549912E6C26DB790",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 80,
-    "bounds": [
-      [
-        -0.8,
-        0.8000000000000002
-      ],
-      [
-        -0.4,
-        0.4
-      ],
-      [
-        0.0,
-        0.45
-      ]
-    ]
-  },
-  {
-    "id": "R2010.stl",
-    "file": "R2010.stl",
-    "source": "production_parts/passive/resistors/2010/R2010.stl",
-    "sha256": "F667633ECE0A4989272AFA6D06681F9646E0C8F7265439529225B8A997AB6C1F",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 32,
-    "bounds": [
-      [
-        -2.55,
-        2.5500000000000007
-      ],
-      [
-        -1.3,
-        1.2999999999999998
-      ],
-      [
-        0.0,
-        0.5
-      ]
-    ]
-  },
-  {
-    "id": "panasonic_d.STL",
-    "file": "panasonic_d.STL",
-    "source": "production_parts/passive/electrolytic_smd/panasonic_d/stl/panasonic_d.STL",
-    "sha256": "5FEC03BD51FBC7716CF64DB4BE12A4A1BBD44931C1D29087948CF0ACE4A4E7E0",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 5422,
-    "bounds": [
-      [
-        0.0,
-        6.604000091552734
-      ],
-      [
-        0.0,
-        7.004208087921143
-      ],
-      [
-        0.0,
-        5.867400169372559
-      ]
-    ]
-  },
-  {
-    "id": "CR54.STL",
-    "file": "CR54.STL",
-    "source": "production_parts/passive/inductors/CR54/stl/CR54.STL",
-    "sha256": "918B9A8FDD1FE85EDE8817534BC30724DBCFB390161D97E15EFDFFB97D3272BF",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 292,
-    "bounds": [
-      [
-        0.0,
-        5.000706195831299
-      ],
-      [
-        0.0,
-        5.000706195831299
-      ],
-      [
-        0.0,
-        4.0
-      ]
-    ]
-  },
-  {
-    "id": "SOIC-8.stl",
-    "file": "SOIC-8.stl",
-    "source": "production_parts/semiconductors/IC_SMD/SOIC/SOIC8/stl/SOIC-8.stl",
-    "sha256": "696786D7E0EEB5E48A12E800315F9D19CBE21B075F31C4F21DBDF6BD2CBC514E",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 1320,
-    "bounds": [
-      [
-        -2.539999946951866,
-        2.3600001484155655
-      ],
-      [
-        -2.9519490422680974,
-        2.9519487200304866
-      ],
-      [
-        0.0,
-        1.3985512256622314
-      ]
-    ]
-  },
-  {
-    "id": "SOT23-3.STL",
-    "file": "SOT23-3.STL",
-    "source": "production_parts/semiconductors/IC_SMD/SOT/SOT23-3.STL",
-    "sha256": "5BBB31C81E29C58708F4060EB6969A2413509A03BE24988C9328A8F0615399F1",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 536,
-    "bounds": [
-      [
-        0.0,
-        2.9
-      ],
-      [
-        0.0,
-        1.2
-      ],
-      [
-        0.0,
-        2.302974
-      ]
-    ]
-  },
-  {
-    "id": "SOT-223.STL",
-    "file": "SOT-223.STL",
-    "source": "production_parts/semiconductors/IC_SMD/SOT/SOT-223.STL",
-    "sha256": "3DD2C7760CB8DCCD2C9374B525251A687E83B6F4E96862828E1EB8CECE277592",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 388,
-    "bounds": [
-      [
-        0.0,
-        6.7
-      ],
-      [
-        0.0,
-        1.9
-      ],
-      [
-        0.0,
-        6.931351
-      ]
-    ]
-  },
-  {
-    "id": "SOT23-5.stl",
-    "file": "SOT23-5.stl",
-    "source": "production_parts/semiconductors/IC_SMD/SOT/SOT23-5.stl",
-    "sha256": "DBFEBE846574794A421D7EB8827FDC99D0BD023FF2EEDD64985329D3A51D8332",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 1466,
-    "bounds": [
-      [
-        -1.4499999999999933,
-        1.449999999999995
-      ],
-      [
-        -1.349999999999998,
-        1.349999999999995
-      ],
-      [
-        -1.762479051592411e-19,
-        1.2
-      ]
-    ]
-  },
-  {
-    "id": "TQFP-48.STL",
-    "file": "TQFP-48.STL",
-    "source": "production_parts/semiconductors/IC_SMD/TQFP/TQFP-48/stl/TQFP-48.STL",
-    "sha256": "6852D75527D5317BF8091CE8FDCDCB59C69787F606CAE6DEFB199C39483FCB7C",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 7580,
-    "bounds": [
-      [
-        0.0,
-        8.987252235412598
-      ],
-      [
-        0.0,
-        8.987252235412598
-      ],
-      [
-        0.0,
-        1.1496087312698364
-      ]
-    ]
-  },
-  {
-    "id": "DO-214AC.STL",
-    "file": "DO-214AC.STL",
-    "source": "production_parts/semiconductors/diode/DO-214AC/stl/DO-214AC.STL",
-    "sha256": "E05BCF3FFDB3C955480B012CC79BBF41C23BD6872101B3BD68373B474D01118A",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 100,
-    "bounds": [
-      [
-        0.0,
-        5.046169281005859
-      ],
-      [
-        0.0,
-        3.0455691814422607
-      ],
-      [
-        0.0,
-        2.2800002098083496
-      ]
-    ]
-  },
-  {
-    "id": "JST-2-PTH.STL",
-    "file": "JST-2-PTH.STL",
-    "source": "production_parts/connectors/JST/JST_2/JST-2-PTH/stl/JST-2-PTH.STL",
-    "sha256": "520BBD5B35C72A41EFED4B43E4986A5682A98CC33E7721DB709933F29494A606",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 284,
-    "bounds": [
-      [
-        0.0,
-        5.900000095367432
-      ],
-      [
-        0.0,
-        6.800000190734863
-      ],
-      [
-        2.5029294192790985e-05,
-        7.600025177001953
-      ]
-    ]
-  },
-  {
-    "id": "1X08_PTH.STL",
-    "file": "1X08_PTH.STL",
-    "source": "production_parts/connectors/headers/1X08_PTH/stl/1X08_PTH.STL",
-    "sha256": "C4D9884872A9DA1A1CBAC484DE8FF12E0CBED757CAB1A961125D8BC1E1EF0180",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 432,
-    "bounds": [
-      [
-        0.0,
-        20.719999313354492
-      ],
-      [
-        0.0,
-        2.5
-      ],
-      [
-        0.0,
-        11.500000953674316
-      ]
-    ]
-  },
-  {
-    "id": "U_FL.STL",
-    "file": "U_FL.STL",
-    "source": "production_parts/connectors/U_FL/stl/U_FL.STL",
-    "sha256": "AFBC29FB42F69D688DB66DF6F5C09FB06AF0BC7865B3F086CAC37A11AEB3E102",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 2104,
-    "bounds": [
-      [
-        0.0,
-        2.999999761581421
-      ],
-      [
-        0.0,
-        3.1000001430511475
-      ],
-      [
-        0.0,
-        1.100000023841858
-      ]
-    ]
-  },
-  {
-    "id": "POWER_JACK_PTH.STL",
-    "file": "POWER_JACK_PTH.STL",
-    "source": "production_parts/connectors/Power_Jack/stl/POWER_JACK_PTH.STL",
-    "sha256": "9E07E422D71F00A82633BCD863170E468D0428449D82E9860FCB6204D9B4CEB7",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 3610,
-    "bounds": [
-      [
-        0.0,
-        13.699999809265137
-      ],
-      [
-        0.0,
-        9.549999237060547
-      ],
-      [
-        0.0,
-        14.59999942779541
-      ]
-    ]
-  },
-  {
-    "id": "TACTILE-PTH.STL",
-    "file": "TACTILE-PTH.STL",
-    "source": "production_parts/switches/tactile/TACTILE-PTH/stl/TACTILE-PTH.STL",
-    "sha256": "74E0C4F9740D9B2F192B3F69CDC8919F44D715E44DB0C2F2FFEF989FF6D64FE2",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 2146,
-    "bounds": [
-      [
-        0.0,
-        5.989999771118164
-      ],
-      [
-        0.0,
-        7.899999618530273
-      ],
-      [
-        0.0,
-        8.5
-      ]
-    ]
-  },
-  {
-    "id": "SI7021.STL",
-    "file": "SI7021.STL",
-    "source": "production_parts/sensors/humidity/si7021/stl/SI7021.STL",
-    "sha256": "19C6E8D52A3A29739EEAFB39235E0EEE705A7DBAD038C64089A53FBBA0B6EDEC",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 416,
-    "bounds": [
-      [
-        0.0,
-        3.046213388442993
-      ],
-      [
-        0.0,
-        1.2300000190734863
-      ],
-      [
-        0.0,
-        3.0
-      ]
-    ]
-  },
-  {
-    "id": "OLED-0_66-64X48.STL",
-    "file": "OLED-0_66-64X48.STL",
-    "source": "production_parts/modules/display/OLED/stl/OLED-0_66-64X48.STL",
-    "sha256": "607B61589B32C6F0C360F0050A01C0B06A89D000D54C8BCD95218C93B2225253",
-    "commit": "53d298c3b8202cf8fce9ab61885855720c84c012",
-    "triangles": 792,
-    "bounds": [
-      [
-        0.0,
-        27.899999618530273
-      ],
-      [
-        0.0,
-        18.549999237060547
-      ],
-      [
-        0.0,
-        1.5
-      ]
-    ]
-  }
+    {
+        "id":  "LED5MM.STL",
+        "file":  "LED5MM.STL",
+        "source":  "production_parts/opto/LED5MM/LED5MM.STL",
+        "sha256":  "223A64721B67F0971832564717D729761A02CAE49F58248A48988AD16DAC11E3",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  8066,
+        "bounds":  [
+                       [
+                           0.0,
+                           35.599998474121094
+                       ],
+                       [
+                           0.005316687747836113,
+                           5.450000286102295
+                       ],
+                       [
+                           0.003752531483769417,
+                           5.896247863769531
+                       ]
+                   ]
+    },
+    {
+        "id":  "LED-0603.stl",
+        "file":  "LED-0603.stl",
+        "source":  "production_parts/opto/LED_0603/LED-0603.stl",
+        "sha256":  "E5C32AC6E3969BB7E1A007D59356B7DDB9772AC4CB53773917B34EDB834E56B5",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  46,
+        "bounds":  [
+                       [
+                           -0.7999999999999955,
+                           0.7999999999999955
+                       ],
+                       [
+                           -0.3999999999999988,
+                           0.3999999999999985
+                       ],
+                       [
+                           0.0,
+                           0.45
+                       ]
+                   ]
+    },
+    {
+        "id":  "WS2812B.STL",
+        "file":  "WS2812B.STL",
+        "source":  "production_parts/opto/WS2812B/stl/WS2812B.STL",
+        "sha256":  "8EF33482044D455F198E2E47506763405F37866A3F365BABB899D7383F632D0B",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  442,
+        "bounds":  [
+                       [
+                           0.0,
+                           5.398499965667725
+                       ],
+                       [
+                           0.0,
+                           1.649999976158142
+                       ],
+                       [
+                           0.0,
+                           5.0
+                       ]
+                   ]
+    },
+    {
+        "id":  "0402-CAP.stl",
+        "file":  "0402-CAP.stl",
+        "source":  "production_parts/passive/ceramic_smd/0402/0402-CAP.stl",
+        "sha256":  "BCF3A2501353F16C8672E1A0D1A5B997238276F3F7E58338743D0D4FD9429919",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  60,
+        "bounds":  [
+                       [
+                           -0.5000000000000021,
+                           0.5
+                       ],
+                       [
+                           -0.2899999999999997,
+                           0.2899999999999998
+                       ],
+                       [
+                           0.0,
+                           0.45000000000000007
+                       ]
+                   ]
+    },
+    {
+        "id":  "0603-CAP.stl",
+        "file":  "0603-CAP.stl",
+        "source":  "production_parts/passive/ceramic_smd/0603/0603-CAP.stl",
+        "sha256":  "7A6132B982B918669505727E7C642A96ED7C3B41BBA587E237C2CF774562BD8C",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  48,
+        "bounds":  [
+                       [
+                           -0.8,
+                           0.8000000000000002
+                       ],
+                       [
+                           -0.4,
+                           0.4
+                       ],
+                       [
+                           0.0,
+                           0.45
+                       ]
+                   ]
+    },
+    {
+        "id":  "0805-CAP.stl",
+        "file":  "0805-CAP.stl",
+        "source":  "production_parts/passive/ceramic_smd/0805/0805-CAP.stl",
+        "sha256":  "61D423803215AFCB169B72230F8B4D63DCB4502AA2F6E052B83D8BBC5CA673DA",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  32,
+        "bounds":  [
+                       [
+                           -1.04,
+                           1.0399999999999998
+                       ],
+                       [
+                           -0.635,
+                           0.6350000000000001
+                       ],
+                       [
+                           0.0,
+                           1.27
+                       ]
+                   ]
+    },
+    {
+        "id":  "1206-CAP.stl",
+        "file":  "1206-CAP.stl",
+        "source":  "production_parts/passive/ceramic_smd/1206/1206-CAP.stl",
+        "sha256":  "E9E4FD256FC71AA17D1060108FC253403EFAE83C49EA0582E4A1F8CAB5663372",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  28,
+        "bounds":  [
+                       [
+                           -1.5999999999999999,
+                           1.6000000000000005
+                       ],
+                       [
+                           -0.8,
+                           0.8
+                       ],
+                       [
+                           0.0,
+                           1.25
+                       ]
+                   ]
+    },
+    {
+        "id":  "0402-RES.stl",
+        "file":  "0402-RES.stl",
+        "source":  "production_parts/passive/resistors/0402/0402-RES.stl",
+        "sha256":  "14C5A5E1CDF1A55AECE529C10B30F01FA40C89A6A86D41C00D96BC330B147900",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  60,
+        "bounds":  [
+                       [
+                           -0.5000000000000021,
+                           0.5
+                       ],
+                       [
+                           -0.2899999999999997,
+                           0.2899999999999998
+                       ],
+                       [
+                           0.0,
+                           0.45000000000000007
+                       ]
+                   ]
+    },
+    {
+        "id":  "0603-RES.stl",
+        "file":  "0603-RES.stl",
+        "source":  "production_parts/passive/resistors/0603/0603-RES.stl",
+        "sha256":  "DB7D3A7E75821C3A71BA8B250F4EF96B053997C795603C24549912E6C26DB790",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  80,
+        "bounds":  [
+                       [
+                           -0.8,
+                           0.8000000000000002
+                       ],
+                       [
+                           -0.4,
+                           0.4
+                       ],
+                       [
+                           0.0,
+                           0.45
+                       ]
+                   ]
+    },
+    {
+        "id":  "R2010.stl",
+        "file":  "R2010.stl",
+        "source":  "production_parts/passive/resistors/2010/R2010.stl",
+        "sha256":  "F667633ECE0A4989272AFA6D06681F9646E0C8F7265439529225B8A997AB6C1F",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  32,
+        "bounds":  [
+                       [
+                           -2.55,
+                           2.5500000000000007
+                       ],
+                       [
+                           -1.3,
+                           1.2999999999999998
+                       ],
+                       [
+                           0.0,
+                           0.5
+                       ]
+                   ]
+    },
+    {
+        "id":  "panasonic_d.STL",
+        "file":  "panasonic_d.STL",
+        "source":  "production_parts/passive/electrolytic_smd/panasonic_d/stl/panasonic_d.STL",
+        "sha256":  "5FEC03BD51FBC7716CF64DB4BE12A4A1BBD44931C1D29087948CF0ACE4A4E7E0",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  5422,
+        "bounds":  [
+                       [
+                           0.0,
+                           6.604000091552734
+                       ],
+                       [
+                           0.0,
+                           7.004208087921143
+                       ],
+                       [
+                           0.0,
+                           5.867400169372559
+                       ]
+                   ]
+    },
+    {
+        "id":  "CR54.STL",
+        "file":  "CR54.STL",
+        "source":  "production_parts/passive/inductors/CR54/stl/CR54.STL",
+        "sha256":  "918B9A8FDD1FE85EDE8817534BC30724DBCFB390161D97E15EFDFFB97D3272BF",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  292,
+        "bounds":  [
+                       [
+                           0.0,
+                           5.000706195831299
+                       ],
+                       [
+                           0.0,
+                           5.000706195831299
+                       ],
+                       [
+                           0.0,
+                           4.0
+                       ]
+                   ]
+    },
+    {
+        "id":  "SOIC-8.stl",
+        "file":  "SOIC-8.stl",
+        "source":  "production_parts/semiconductors/IC_SMD/SOIC/SOIC8/stl/SOIC-8.stl",
+        "sha256":  "696786D7E0EEB5E48A12E800315F9D19CBE21B075F31C4F21DBDF6BD2CBC514E",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  1320,
+        "bounds":  [
+                       [
+                           -2.539999946951866,
+                           2.3600001484155655
+                       ],
+                       [
+                           -2.9519490422680974,
+                           2.9519487200304866
+                       ],
+                       [
+                           0.0,
+                           1.3985512256622314
+                       ]
+                   ]
+    },
+    {
+        "id":  "SOT23-3.STL",
+        "file":  "SOT23-3.STL",
+        "source":  "production_parts/semiconductors/IC_SMD/SOT/SOT23-3.STL",
+        "sha256":  "5BBB31C81E29C58708F4060EB6969A2413509A03BE24988C9328A8F0615399F1",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  536,
+        "bounds":  [
+                       [
+                           0.0,
+                           2.9
+                       ],
+                       [
+                           0.0,
+                           1.2
+                       ],
+                       [
+                           0.0,
+                           2.302974
+                       ]
+                   ]
+    },
+    {
+        "id":  "SOT-223.STL",
+        "file":  "SOT-223.STL",
+        "source":  "production_parts/semiconductors/IC_SMD/SOT/SOT-223.STL",
+        "sha256":  "3DD2C7760CB8DCCD2C9374B525251A687E83B6F4E96862828E1EB8CECE277592",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  388,
+        "bounds":  [
+                       [
+                           0.0,
+                           6.7
+                       ],
+                       [
+                           0.0,
+                           1.9
+                       ],
+                       [
+                           0.0,
+                           6.931351
+                       ]
+                   ]
+    },
+    {
+        "id":  "SOT23-5.stl",
+        "file":  "SOT23-5.stl",
+        "source":  "production_parts/semiconductors/IC_SMD/SOT/SOT23-5.stl",
+        "sha256":  "DBFEBE846574794A421D7EB8827FDC99D0BD023FF2EEDD64985329D3A51D8332",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  1466,
+        "bounds":  [
+                       [
+                           -1.4499999999999933,
+                           1.449999999999995
+                       ],
+                       [
+                           -1.349999999999998,
+                           1.349999999999995
+                       ],
+                       [
+                           -1.7624790515924109E-19,
+                           1.2
+                       ]
+                   ]
+    },
+    {
+        "id":  "TQFP-48.STL",
+        "file":  "TQFP-48.STL",
+        "source":  "production_parts/semiconductors/IC_SMD/TQFP/TQFP-48/stl/TQFP-48.STL",
+        "sha256":  "6852D75527D5317BF8091CE8FDCDCB59C69787F606CAE6DEFB199C39483FCB7C",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  7580,
+        "bounds":  [
+                       [
+                           0.0,
+                           8.987252235412598
+                       ],
+                       [
+                           0.0,
+                           8.987252235412598
+                       ],
+                       [
+                           0.0,
+                           1.1496087312698364
+                       ]
+                   ]
+    },
+    {
+        "id":  "DO-214AC.STL",
+        "file":  "DO-214AC.STL",
+        "source":  "production_parts/semiconductors/diode/DO-214AC/stl/DO-214AC.STL",
+        "sha256":  "E05BCF3FFDB3C955480B012CC79BBF41C23BD6872101B3BD68373B474D01118A",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  100,
+        "bounds":  [
+                       [
+                           0.0,
+                           5.046169281005859
+                       ],
+                       [
+                           0.0,
+                           3.0455691814422607
+                       ],
+                       [
+                           0.0,
+                           2.2800002098083496
+                       ]
+                   ]
+    },
+    {
+        "id":  "JST-2-PTH.STL",
+        "file":  "JST-2-PTH.STL",
+        "source":  "production_parts/connectors/JST/JST_2/JST-2-PTH/stl/JST-2-PTH.STL",
+        "sha256":  "520BBD5B35C72A41EFED4B43E4986A5682A98CC33E7721DB709933F29494A606",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  284,
+        "bounds":  [
+                       [
+                           0.0,
+                           5.900000095367432
+                       ],
+                       [
+                           0.0,
+                           6.800000190734863
+                       ],
+                       [
+                           2.5029294192790985E-05,
+                           7.600025177001953
+                       ]
+                   ]
+    },
+    {
+        "id":  "1X08_PTH.STL",
+        "file":  "1X08_PTH.STL",
+        "source":  "production_parts/connectors/headers/1X08_PTH/stl/1X08_PTH.STL",
+        "sha256":  "C4D9884872A9DA1A1CBAC484DE8FF12E0CBED757CAB1A961125D8BC1E1EF0180",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  432,
+        "bounds":  [
+                       [
+                           0.0,
+                           20.719999313354492
+                       ],
+                       [
+                           0.0,
+                           2.5
+                       ],
+                       [
+                           0.0,
+                           11.500000953674316
+                       ]
+                   ]
+    },
+    {
+        "id":  "U_FL.STL",
+        "file":  "U_FL.STL",
+        "source":  "production_parts/connectors/U_FL/stl/U_FL.STL",
+        "sha256":  "AFBC29FB42F69D688DB66DF6F5C09FB06AF0BC7865B3F086CAC37A11AEB3E102",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  2104,
+        "bounds":  [
+                       [
+                           0.0,
+                           2.999999761581421
+                       ],
+                       [
+                           0.0,
+                           3.1000001430511475
+                       ],
+                       [
+                           0.0,
+                           1.100000023841858
+                       ]
+                   ]
+    },
+    {
+        "id":  "POWER_JACK_PTH.STL",
+        "file":  "POWER_JACK_PTH.STL",
+        "source":  "production_parts/connectors/Power_Jack/stl/POWER_JACK_PTH.STL",
+        "sha256":  "9E07E422D71F00A82633BCD863170E468D0428449D82E9860FCB6204D9B4CEB7",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  3610,
+        "bounds":  [
+                       [
+                           0.0,
+                           13.699999809265137
+                       ],
+                       [
+                           0.0,
+                           9.549999237060547
+                       ],
+                       [
+                           0.0,
+                           14.59999942779541
+                       ]
+                   ]
+    },
+    {
+        "id":  "TACTILE-PTH.STL",
+        "file":  "TACTILE-PTH.STL",
+        "source":  "production_parts/switches/tactile/TACTILE-PTH/stl/TACTILE-PTH.STL",
+        "sha256":  "74E0C4F9740D9B2F192B3F69CDC8919F44D715E44DB0C2F2FFEF989FF6D64FE2",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  2146,
+        "bounds":  [
+                       [
+                           0.0,
+                           5.989999771118164
+                       ],
+                       [
+                           0.0,
+                           7.899999618530273
+                       ],
+                       [
+                           0.0,
+                           8.5
+                       ]
+                   ]
+    },
+    {
+        "id":  "SI7021.STL",
+        "file":  "SI7021.STL",
+        "source":  "production_parts/sensors/humidity/si7021/stl/SI7021.STL",
+        "sha256":  "19C6E8D52A3A29739EEAFB39235E0EEE705A7DBAD038C64089A53FBBA0B6EDEC",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  416,
+        "bounds":  [
+                       [
+                           0.0,
+                           3.046213388442993
+                       ],
+                       [
+                           0.0,
+                           1.2300000190734863
+                       ],
+                       [
+                           0.0,
+                           3.0
+                       ]
+                   ]
+    },
+    {
+        "id":  "OLED-0_66-64X48.STL",
+        "file":  "OLED-0_66-64X48.STL",
+        "source":  "production_parts/modules/display/OLED/stl/OLED-0_66-64X48.STL",
+        "sha256":  "607B61589B32C6F0C360F0050A01C0B06A89D000D54C8BCD95218C93B2225253",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012",
+        "triangles":  792,
+        "bounds":  [
+                       [
+                           0.0,
+                           27.899999618530273
+                       ],
+                       [
+                           0.0,
+                           18.549999237060547
+                       ],
+                       [
+                           0.0,
+                           1.5
+                       ]
+                   ]
+    },
+    {
+        "id":  "AXIAL-0_3.STL",
+        "file":  "AXIAL-0_3.STL",
+        "source":  "production_parts/pth/resistor/AXIAL-0_3.STL",
+        "sha256":  "2EA3382AFF877975E0FF3AA891BF0F8967DE73F2412920EC51AA94A57883D1FC",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012"
+    },
+    {
+        "id":  "TO220V.stl",
+        "file":  "TO220V.stl",
+        "source":  "production_parts/pth/TO220V/stl/TO220V.stl",
+        "sha256":  "C85141020F95C4720B96A5FB1A957D97861A2E2378037E3DD8098298EC70A0CB",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012"
+    },
+    {
+        "id":  "DIP8SMD.STL",
+        "file":  "DIP8SMD.STL",
+        "source":  "production_parts/semiconductors/IC_SMD/8/DIP8SMD/stl/DIP8SMD.STL",
+        "sha256":  "92A807C7BA781035EE5A96878264B4322AA886CD6327E02BF082AEAC928290DA",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012"
+    },
+    {
+        "id":  "JST-3-PTH-VERT.STL",
+        "file":  "JST-3-PTH-VERT.STL",
+        "source":  "production_parts/connectors/JST/JST_3/JST-3-PTH-VERT/stl/JST-3-PTH-VERT.STL",
+        "sha256":  "376A76D133146D9D7BBBF4BB3B96FC1538B576EBA2891861CAF0110CF0B71CAE",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012"
+    },
+    {
+        "id":  "JST-4-PTH-VERT.STL",
+        "file":  "JST-4-PTH-VERT.STL",
+        "source":  "production_parts/connectors/JST/JST_4/JST-4-PTH-VERT/stl/JST-4-PTH-VERT.STL",
+        "sha256":  "3656312E8B0E25B4BAC3C15873EEC6FFED16DFE303B0684CD657F34A7339BAC0",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012"
+    },
+    {
+        "id":  "USB-MICROB.stl",
+        "file":  "USB-MICROB.stl",
+        "source":  "production_parts/connectors/usb/USB-MICROB.stl",
+        "sha256":  "FE7796801907D822B912AA1645824F2C8293E65B9FFF912EC5FA8E016E1B91C6",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012"
+    },
+    {
+        "id":  "USB-B-PTH.STL",
+        "file":  "USB-B-PTH.STL",
+        "source":  "production_parts/pth/USB/stl/USB-B-PTH.STL",
+        "sha256":  "E9720EA7DAE569AD732A7DFF7B7BD83C79B4DC1EB57DE342B973B5985E6BACFC",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012"
+    },
+    {
+        "id":  "LED-1206.stl",
+        "file":  "LED-1206.stl",
+        "source":  "production_parts/opto/LED_1206/LED-1206.stl",
+        "sha256":  "342477F1802337D22BABA28CE9B3B7F18520A5203F5503AB866AB9167EE46CA8",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012"
+    },
+    {
+        "id":  "R1206.stl",
+        "file":  "R1206.stl",
+        "source":  "production_parts/passive/polyfuse/ptc-1206/stl/R1206.stl",
+        "sha256":  "41377D4D3CEA9551BC0F4C90BCEC2C9790D20B529AA795290B0598349AFB6D22",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012"
+    },
+    {
+        "id":  "CRYSTAL-SMD-3_2X2_5.STL",
+        "file":  "CRYSTAL-SMD-3_2X2_5.STL",
+        "source":  "production_parts/passive/resonator/CRYSTAL-SMD-3_2X2_5/stl/CRYSTAL-SMD-3_2X2_5.STL",
+        "sha256":  "C09718FE044C245492BFB6E504115DDA2D5B04B44EBA08638806999B7B1C6E8A",
+        "commit":  "53d298c3b8202cf8fce9ab61885855720c84c012"
+    }
 ]

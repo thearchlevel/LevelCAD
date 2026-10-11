@@ -1,4 +1,6 @@
 #include <QJsonArray>
+#include <QRegularExpression>
+#include <QtEndian>
 #include <cmath>
 #include <levelcad/app/BoardIO.hpp>
 #include <set>
@@ -47,6 +49,7 @@ QJsonObject boardToJson(const pcb::Board& board) {
             value["sizeX"] = QString::number(pad.sizeX);
             value["sizeY"] = QString::number(pad.sizeY);
             value["rotation"] = pad.rotation;
+            value["cornerRatio"] = pad.cornerRatio;
             value["layerMask"] = QString::number(pad.layerMask);
             pads.append(value);
         }
@@ -55,11 +58,18 @@ QJsonObject boardToJson(const pcb::Board& board) {
         object["modelOffsetX"] = footprint.modelOffsetX;
         object["modelOffsetY"] = footprint.modelOffsetY;
         object["modelOffsetZ"] = footprint.modelOffsetZ;
+        object["modelRotationX"] = footprint.modelRotationX;
+        object["modelRotationY"] = footprint.modelRotationY;
+        object["modelRotationZ"] = footprint.modelRotationZ;
+        object["modelScale"] = footprint.modelScale;
+        object["bodyColor"] = text(footprint.bodyColor);
+        object["texturePng"] = text(footprint.texturePng);
         QJsonArray mesh;
         for (const auto& triangle : footprint.mesh) {
             QJsonArray vertices;
             for (const auto& vertex : triangle)
-                vertices.append(QJsonArray{vertex.x, vertex.y, vertex.z});
+                vertices.append(
+                    QJsonArray{vertex.x, vertex.y, vertex.z, static_cast<double>(vertex.color)});
             mesh.append(vertices);
         }
         object["mesh"] = mesh;
@@ -92,7 +102,16 @@ QJsonObject boardToJson(const pcb::Board& board) {
             points.append(pointJson(point));
         outline.append(points);
     }
-    return QJsonObject{{"layers", layers},
+    return QJsonObject{{"projectName", text(board.projectName)},
+                       {"revision", text(board.revision)},
+                       {"creator", text(board.creator)},
+                       {"solderMask", text(board.solderMask)},
+                       {"silkColor", text(board.silkColor)},
+                       {"finishColor", text(board.finishColor)},
+                       {"showAirwires", board.showAirwires},
+                       {"showReferences", board.showReferences},
+                       {"showPadNumbers", board.showPadNumbers},
+                       {"layers", layers},
                        {"outline", outline},
                        {"format", "levelcad-pcb"},
                        {"version", 1},
@@ -118,6 +137,23 @@ bool boardFromJson(pcb::Board& destination, const QJsonObject& root, QString* er
             return size;
         };
         pcb::Board board;
+        auto color = [](const QJsonValue& value, const std::string& fallback) {
+            if (value.isUndefined())
+                return fallback;
+            auto string = value.toString();
+            if (!QRegularExpression("^#[0-9a-fA-F]{6}$").match(string).hasMatch())
+                throw std::runtime_error("Invalid material color");
+            return string.toStdString();
+        };
+        board.projectName = root["projectName"].toString("Untitled").toStdString();
+        board.revision = root["revision"].toString("1.0").toStdString();
+        board.creator = root["creator"].toString().toStdString();
+        board.solderMask = color(root["solderMask"], board.solderMask);
+        board.silkColor = color(root["silkColor"], board.silkColor);
+        board.finishColor = color(root["finishColor"], board.finishColor);
+        board.showAirwires = root["showAirwires"].toBool(true);
+        board.showReferences = root["showReferences"].toBool(true);
+        board.showPadNumbers = root["showPadNumbers"].toBool(true);
         board.width = dimension(root["width"]);
         board.height = dimension(root["height"]);
         board.thickness = dimension(root["thickness"]);
@@ -174,6 +210,9 @@ bool boardFromJson(pcb::Board& destination, const QJsonObject& root, QString* er
                 pad.sizeX = data["sizeX"].toString().toLongLong();
                 pad.sizeY = data["sizeY"].toString().toLongLong();
                 pad.rotation = data["rotation"].toDouble();
+                pad.cornerRatio = data["cornerRatio"].toDouble(.25);
+                if (!std::isfinite(pad.cornerRatio) || pad.cornerRatio < 0 || pad.cornerRatio > .5)
+                    throw std::runtime_error("Invalid pad corner ratio");
                 if (data.contains("layerMask"))
                     pad.layerMask = data["layerMask"].toString().toUInt();
             }
@@ -181,6 +220,34 @@ bool boardFromJson(pcb::Board& destination, const QJsonObject& root, QString* er
             footprint.modelOffsetX = item["modelOffsetX"].toDouble();
             footprint.modelOffsetY = item["modelOffsetY"].toDouble();
             footprint.modelOffsetZ = item["modelOffsetZ"].toDouble();
+            footprint.modelRotationX = item["modelRotationX"].toDouble();
+            footprint.modelRotationY = item["modelRotationY"].toDouble();
+            footprint.modelRotationZ = item["modelRotationZ"].toDouble();
+            footprint.modelScale = item["modelScale"].toDouble(1);
+            footprint.bodyColor = color(item["bodyColor"], footprint.bodyColor);
+            footprint.texturePng = item["texturePng"].toString().toStdString();
+            for (auto value :
+                 {footprint.modelOffsetX, footprint.modelOffsetY, footprint.modelOffsetZ,
+                  footprint.modelRotationX, footprint.modelRotationY, footprint.modelRotationZ})
+                if (!std::isfinite(value) || std::abs(value) > 1000)
+                    throw std::runtime_error("Invalid model transform");
+            if (!std::isfinite(footprint.modelScale) || footprint.modelScale < .01 ||
+                footprint.modelScale > 100)
+                throw std::runtime_error("Invalid model scale");
+            if (footprint.texturePng.size() > 3 * 1024 * 1024)
+                throw std::runtime_error("Texture is too large");
+            if (!footprint.texturePng.empty()) {
+                auto png = QByteArray::fromBase64(QByteArray::fromStdString(footprint.texturePng));
+                if (png.size() < 33 || !png.startsWith(QByteArray::fromHex("89504e470d0a1a0a")) ||
+                    png.mid(12, 4) != "IHDR")
+                    throw std::runtime_error("Invalid texture PNG");
+                auto x =
+                    qFromBigEndian<quint32>(reinterpret_cast<const uchar*>(png.constData() + 16));
+                auto y =
+                    qFromBigEndian<quint32>(reinterpret_cast<const uchar*>(png.constData() + 20));
+                if (!x || !y || x > 2048 || y > 2048)
+                    throw std::runtime_error("Texture dimensions exceed limits");
+            }
             if (item["mesh"].toArray().size() > 200000)
                 throw std::runtime_error("Mesh is too large");
             for (auto face : item["mesh"].toArray()) {
@@ -190,10 +257,16 @@ bool boardFromJson(pcb::Board& destination, const QJsonObject& root, QString* er
                 pcb::MeshTriangle triangle;
                 for (int index = 0; index < 3; ++index) {
                     auto point = vertices[index].toArray();
-                    if (point.size() != 3)
+                    if (point.size() != 3 && point.size() != 4)
                         throw std::runtime_error("Invalid mesh vertex");
                     triangle[index] = {point[0].toDouble(NAN), point[1].toDouble(NAN),
                                        point[2].toDouble(NAN)};
+                    if (point.size() == 4) {
+                        double color = point[3].toDouble(-1);
+                        if (color < 0 || color > 0xffffff || color != std::floor(color))
+                            throw std::runtime_error("Invalid mesh material");
+                        triangle[index].color = static_cast<std::uint32_t>(color);
+                    }
                     auto v = triangle[index];
                     if (!std::isfinite(v.x) || !std::isfinite(v.y) || !std::isfinite(v.z) ||
                         std::abs(v.x) > 1000 || std::abs(v.y) > 1000 || std::abs(v.z) > 1000)

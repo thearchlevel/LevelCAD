@@ -1,0 +1,30 @@
+[
+    {
+        "commit":  "cf07d53964cff7009fa8374b82406e5b4c59ac8b",
+        "files":  22918,
+        "name":  "kicad-symbols",
+        "source":  "https://gitlab.com/kicad/libraries/kicad-symbols",
+        "bytes":  248281313
+    },
+    {
+        "commit":  "f8440fa61a5690b48b325c891fdb99c0038a5a59",
+        "files":  15532,
+        "name":  "kicad-footprints",
+        "source":  "https://gitlab.com/kicad/libraries/kicad-footprints",
+        "bytes":  165781201
+    },
+    {
+        "commit":  "8975715167d1a76f9b44be155ac02326f704cdbb",
+        "files":  7319,
+        "name":  "kicad-packages3d",
+        "source":  "https://gitlab.com/kicad/libraries/kicad-packages3d",
+        "bytes":  3387736254
+    },
+    {
+        "commit":  "3ed4538b0f965d821df63a5fffc4441e723cfe7f",
+        "files":  184,
+        "name":  "kicad-templates",
+        "source":  "https://gitlab.com/kicad/libraries/kicad-templates",
+        "bytes":  5451286
+    }
+]

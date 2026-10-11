@@ -7,4 +7,5 @@ namespace levelcad::app {
 QStringList bundledModels();
 std::vector<pcb::MeshTriangle> loadStl(const QString& path);
 void assignMesh(pcb::Footprint& footprint, const QString& path);
+void assignAutomaticModel(pcb::Footprint& footprint);
 } // namespace levelcad::app

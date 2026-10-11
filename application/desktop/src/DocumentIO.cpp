@@ -2,7 +2,9 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QRegularExpression>
 #include <QSaveFile>
+#include <cmath>
 #include <levelcad/app/BoardIO.hpp>
 #include <levelcad/app/DocumentIO.hpp>
 #include <stdexcept>
@@ -80,6 +82,10 @@ QJsonObject documentToJson(const core::Document& document) {
         object["text"] = QString::fromStdString(note.text);
         object["author"] = QString::fromStdString(note.author);
         object["electrical"] = note.electrical;
+        object["background"] = note.background;
+        object["widthMm"] = note.widthMm;
+        object["heightMm"] = note.heightMm;
+        object["color"] = QString::fromStdString(note.color);
         notes.append(object);
     }
     return {{"format", "levelcad-schematic"},
@@ -219,6 +225,18 @@ bool documentFromJson(core::Document& document, const QJsonObject& root, QString
             notes.push_back({id, decodePoint(object), object["text"].toString().toStdString(),
                              object["author"].toString().toStdString(),
                              object["electrical"].toBool()});
+            auto& note = notes.back();
+            note.background = object["background"].toBool();
+            note.widthMm = object["widthMm"].toDouble(40.0);
+            note.heightMm = object["heightMm"].toDouble(30.0);
+            note.color = object["color"].toString("#4b8096").toStdString();
+            if (!std::isfinite(note.widthMm) || !std::isfinite(note.heightMm) || note.widthMm < 1 ||
+                note.heightMm < 1 || note.widthMm > 1000 || note.heightMm > 1000 ||
+                !QRegularExpression("^#[0-9a-fA-F]{6}$")
+                     .match(QString::fromStdString(note.color))
+                     .hasMatch() ||
+                (note.background && note.electrical))
+                throw std::runtime_error("Invalid schematic area: " + std::to_string(note.widthMm) + "/" + std::to_string(note.heightMm) + "/" + note.color + "/" + std::to_string(note.electrical));
         }
         document.load(std::move(symbols), std::move(wires), std::move(notes));
         return true;

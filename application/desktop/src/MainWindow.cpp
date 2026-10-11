@@ -4,12 +4,15 @@
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QDialog>
+#include <QDialogButtonBox>
 #include <QDir>
 #include <QDockWidget>
 #include <QDoubleSpinBox>
+#include <QElapsedTimer>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFormLayout>
+#include <QFutureWatcher>
 #include <QHostAddress>
 #include <QIcon>
 #include <QInputDialog>
@@ -28,6 +31,7 @@
 #include <QProgressDialog>
 #include <QPushButton>
 #include <QSaveFile>
+#include <QSet>
 #include <QSettings>
 #include <QSignalBlocker>
 #include <QSpinBox>
@@ -39,12 +43,19 @@
 #include <QTreeWidget>
 #include <QUuid>
 #include <QVBoxLayout>
+#include <QtConcurrent>
 #include <algorithm>
+#include <levelcad/app/AiAssistant.hpp>
 #include <levelcad/app/BoardIO.hpp>
+#include <levelcad/app/CadCommands.hpp>
 #include <levelcad/app/DocumentIO.hpp>
 #include <levelcad/app/ExportDialog.hpp>
 #include <levelcad/app/Language.hpp>
 #include <levelcad/app/MainWindow.hpp>
+#include <levelcad/app/MeshLibrary.hpp>
+#include <levelcad/app/OfficialLibrary.hpp>
+#include <levelcad/app/PluginEngine.hpp>
+#include <levelcad/app/Production.hpp>
 #include <levelcad/app/ProjectImport.hpp>
 #include <levelcad/connectivity/Connectivity.hpp>
 #include <levelcad/exporters/SpiceExporter.hpp>
@@ -74,7 +85,9 @@ QString recoveryPath() {
 }
 } // namespace
 
-MainWindow::MainWindow() {
+MainWindow::MainWindow(std::function<void(int, const QString&)> progress) {
+    if (progress)
+        progress(10, "Preparando ferramentas e paineis...");
     resize(1440, 900);
     setWindowIcon(QIcon(":/branding/icon.png"));
     view_ = new SchematicView(this);
@@ -164,11 +177,13 @@ MainWindow::MainWindow() {
         QTextBrowser text;
         QFile license(":/kicad/LICENSE.md");
         if (license.open(QIODevice::ReadOnly))
-            text.setMarkdown("# KiCad Library Contributors\n\nFonte: "
-                             "https://gitlab.com/kicad/libraries/kicad-symbols / versao "
-                             "9.0.0\n\nDados incorporados sem alteracoes. Importacao e aproximacao "
-                             "de curvas pelo LevelCAD.\n\n" +
-                             QString::fromUtf8(license.readAll()));
+            text.setMarkdown(
+                "# KiCad Library Contributors\n\nFonte: "
+                "https://gitlab.com/kicad/libraries\n\n"
+                "Simbolos, footprints e modelos 3D: KiCad Library Contributors.\n\n"
+                "Bibliotecas locais oficiais; consulte libraries/official/inventory.json "
+                "para as revisoes e os arquivos LICENSE.md e CREDITS.md para os autores.\n\n" +
+                QString::fromUtf8(license.readAll()));
         layout.addWidget(&text);
         dialog.exec();
     });
@@ -196,6 +211,7 @@ MainWindow::MainWindow() {
     tool(QObject::tr("Terra"), SchematicView::Tool::Ground, "G");
     tool(QObject::tr("Rotulo de rede"), SchematicView::Tool::NetLabel, "L");
     tool(QObject::tr("Comentario"), SchematicView::Tool::Comment, "T");
+    tool(QObject::tr("Area de fundo"), SchematicView::Tool::Area, "Shift+A");
     toolbar->addSeparator();
     toolbar->addAction(undoAction_);
     toolbar->addAction(redoAction_);
@@ -255,7 +271,11 @@ MainWindow::MainWindow() {
             view_->setTool(static_cast<SchematicView::Tool>(index));
     });
     try {
+        if (progress)
+            progress(25, "Carregando a biblioteca de componentes...");
         appendLibrary(bundledLibrary());
+        if (progress)
+            progress(60, "Biblioteca pronta. Preparando PCB e modelos 3D...");
         for (const auto& path : QSettings().value("libraries/imported").toStringList()) {
             if (QFileInfo::exists(path))
                 appendLibrary(loadKiCadLibrary(path).entries);
@@ -309,6 +329,9 @@ MainWindow::MainWindow() {
     resetHistory();
     rebuildTree();
     setupWorkspace();
+    setupAutomation();
+    if (progress)
+        progress(85, "Preparando colaboracao, IA e preferencias...");
     defaultLayout_ = saveState();
     QSettings settings;
     restoreGeometry(settings.value("window/geometry").toByteArray());
@@ -544,16 +567,25 @@ MainWindow::MainWindow() {
             QSettings().setValue("profile/name", name.trimmed());
     });
     setUiLanguage(QSettings().value("ui/language", "pt_BR").toString(), this);
+    if (progress)
+        progress(95, "Finalizando o ambiente de engenharia...");
 }
 
 void MainWindow::resetHistory() {
+    ++designRevision_;
     history_ = {document_};
+    boardHistory_ = {board_};
+    if (boardView_)
+        boardView_->resetHistory();
     historyIndex_ = savedIndex_ = 0;
     updateTitle();
 }
 
 // A new edit after undo starts a new branch; the old redo steps no longer apply.
 void MainWindow::recordChange() {
+    ++designRevision_;
+    if (autoSync_ && !syncing_ && syncTimer_)
+        syncTimer_->start();
     if (collaboration_) {
         auto state = documentToJson(document_);
         state["pcb"] = boardToJson(board_);
@@ -563,6 +595,8 @@ void MainWindow::recordChange() {
         savedIndex_ = -1;
     history_.resize(historyIndex_ + 1);
     history_.push_back(document_);
+    boardHistory_.resize(historyIndex_ + 1);
+    boardHistory_.push_back(board_);
     ++historyIndex_;
     rebuildTree();
     updateTitle();
@@ -578,7 +612,13 @@ void MainWindow::undo() {
     }
     if (historyIndex_ == 0)
         return;
+    ++designRevision_;
     document_ = history_[--historyIndex_];
+    board_ = boardHistory_[historyIndex_];
+    boardView_->resetHistory();
+    boardView_->refresh();
+    rebuildBoardPanels();
+    boardModel_->update();
     view_->setTool(SchematicView::Tool::Select);
     view_->refresh();
     rebuildTree();
@@ -592,7 +632,13 @@ void MainWindow::redo() {
         return;
     if (historyIndex_ + 1 >= static_cast<int>(history_.size()))
         return;
+    ++designRevision_;
     document_ = history_[++historyIndex_];
+    board_ = boardHistory_[historyIndex_];
+    boardView_->resetHistory();
+    boardView_->refresh();
+    rebuildBoardPanels();
+    boardModel_->update();
     view_->setTool(SchematicView::Tool::Select);
     view_->refresh();
     rebuildTree();
@@ -658,12 +704,12 @@ void MainWindow::rebuildTree() {
         tree_, {QObject::tr("Ligacoes"), QString::number(document_.wires().size())});
     for (const auto& w : document_.wires()) {
         auto* i = new QTreeWidgetItem(
-            wires, {"Ligacao #" + QString::number(w.id), QObject::tr("ConexAo")});
+            wires, {"Ligacao #" + QString::number(w.id), QObject::tr("Conexao")});
         i->setData(0, Qt::UserRole, QVariant::fromValue<qulonglong>(w.id));
     }
     auto graph = connectivity::analyze(document_);
     auto* networks = new QTreeWidgetItem(
-        tree_, {QObject::tr("Redes elAtricas"), QString::number(graph.nets.size())});
+        tree_, {QObject::tr("Redes eletricas"), QString::number(graph.nets.size())});
     for (const auto& net : graph.nets) {
         auto* node = new QTreeWidgetItem(networks, {QString::fromStdString(net.name),
                                                     QString::number(net.pins.size()) + " pinos"});
@@ -702,6 +748,18 @@ void MainWindow::openDocument(const QString& name) {
         QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
         try {
             auto project = importExternalProject(file);
+            for (auto& footprint : project.board.footprints) {
+                try {
+                    if (assignOfficialModel(footprint))
+                        project.warnings.removeAll("Modelo externo nao incorporado: " +
+                                                   QString::fromStdString(footprint.reference) +
+                                                   ". Atribua um STL na biblioteca 3D.");
+                } catch (const std::exception& error) {
+                    project.warnings.append(
+                        QString::fromStdString(footprint.reference) +
+                        ": modelo 3D nao carregado: " + QString::fromUtf8(error.what()));
+                }
+            }
             document_ = std::move(project.document);
             board_ = std::move(project.board);
             path_.clear();
@@ -735,6 +793,25 @@ void MainWindow::openDocument(const QString& name) {
         QMessageBox::warning(this, QObject::tr("Falha ao abrir"), error);
         return;
     }
+    // Older projects may contain generic meshes. Refresh only missing or bundled placeholders.
+    QStringList modelWarnings;
+    for (auto& footprint : board_.footprints) {
+        if (!footprint.mesh.empty() && !footprint.modelName.empty() &&
+            !footprint.modelName.starts_with(":/models3d/"))
+            continue;
+        try {
+            assignOfficialModel(footprint);
+        } catch (const std::exception& error) {
+            modelWarnings.append(QString::fromStdString(footprint.reference) + ": " +
+                                 QString::fromUtf8(error.what()));
+        }
+    }
+    boardView_->refresh();
+    boardModel_->update();
+    schematicModel_->update();
+    rebuildBoardPanels();
+    if (!modelWarnings.isEmpty())
+        statusBar()->showMessage(modelWarnings.join(" / "), 15000);
     path_ = file;
     view_->setTool(SchematicView::Tool::Select);
     view_->refresh();
@@ -960,10 +1037,14 @@ void MainWindow::exportSpice() {
 }
 
 void MainWindow::appendLibrary(const std::vector<LibraryEntry>& entries) {
+    QSet<QString> known;
+    for (const auto& existing : libraryEntries_)
+        known.insert(existing.name);
+    libraryList_->setUpdatesEnabled(false);
     for (const auto& entry : entries) {
-        if (std::any_of(libraryEntries_.begin(), libraryEntries_.end(),
-                        [&](const auto& existing) { return existing.name == entry.name; }))
+        if (known.contains(entry.name))
             continue;
+        known.insert(entry.name);
         const int index = static_cast<int>(libraryEntries_.size());
         libraryEntries_.push_back(entry);
         auto* item = new QListWidgetItem(entry.name, libraryList_);
@@ -972,6 +1053,7 @@ void MainWindow::appendLibrary(const std::vector<LibraryEntry>& entries) {
                          QString::number(entry.prototype.pinDefinitions.size()) +
                          " pinos\nFootprint: " + QString::fromStdString(entry.prototype.footprint));
     }
+    libraryList_->setUpdatesEnabled(true);
     libraryCount_->setText(QString::number(libraryEntries_.size()) + " simbolos / uso offline");
 }
 
@@ -1071,31 +1153,54 @@ void MainWindow::setupWorkspace() {
         auto* exportAction = toolbar->addAction(QObject::tr("Exportar modelo 3D"));
         connect(exportAction, &QAction::triggered, model, &ModelView::exportModel);
         if (model == boardModel_) {
+            auto* display = new QComboBox;
+            display->addItems({tr("Placa montada"), tr("Camadas separadas"), tr("Somente cobre"),
+                               tr("Placa transparente")});
+            toolbar->addWidget(display);
+            connect(display, &QComboBox::currentIndexChanged, model, [model](int index) {
+                model->setBoardDisplay(static_cast<ModelView::BoardDisplay>(index));
+            });
+            auto* separation = new QDoubleSpinBox;
+            separation->setRange(1, 20);
+            separation->setValue(4);
+            separation->setSuffix(" mm");
+            separation->setToolTip(tr("Distancia visual entre camadas"));
+            toolbar->addWidget(separation);
+            connect(separation, &QDoubleSpinBox::valueChanged, model,
+                    &ModelView::setExplodeSpacing);
+            auto* camera = new QComboBox;
+            camera->addItems({tr("Isometrica"), tr("Superior"), tr("Inferior")});
+            toolbar->addWidget(camera);
+            connect(camera, &QComboBox::currentIndexChanged, model, &ModelView::setCameraPreset);
+            auto* bodies = toolbar->addAction(tr("Componentes"));
+            bodies->setCheckable(true);
+            bodies->setChecked(true);
+            connect(bodies, &QAction::toggled, model, &ModelView::setComponentsVisible);
+            auto* copper = toolbar->addAction(tr("Cobre"));
+            copper->setCheckable(true);
+            copper->setChecked(true);
+            connect(copper, &QAction::toggled, model, &ModelView::setCopperVisible);
             auto* height = toolbar->addAction(QObject::tr("Altura 3D"));
             connect(height, &QAction::triggered, model, &ModelView::editHeight);
+        }
+        if (model == schematicModel_) {
+            auto* scale = new QDoubleSpinBox;
+            scale->setRange(.5, 6);
+            scale->setValue(1.8);
+            scale->setSingleStep(.2);
+            scale->setSuffix(" x");
+            scale->setToolTip(tr("Escala visual dos componentes"));
+            toolbar->addWidget(scale);
+            connect(scale, &QDoubleSpinBox::valueChanged, model, &ModelView::setComponentScale);
         }
         registerWindow(panel, title);
     };
     registerModel(boardModel_, QObject::tr("PCB 3D"));
     registerModel(schematicModel_, QObject::tr("Esquematico 3D"));
     boardView_->onChanged = [this] {
+        recordChange();
         rebuildBoardPanels();
-        savedIndex_ = -1;
-        updateTitle();
         boardModel_->update();
-        savedIndex_ = -1;
-        updateTitle();
-        if (collaboration_) {
-            auto state = documentToJson(document_);
-            state["pcb"] = boardToJson(board_);
-            collaboration_->submit(state);
-        }
-        QSaveFile recovery(recoveryPath() + ".levelpcb");
-        QDir().mkpath(QFileInfo(recovery.fileName()).absolutePath());
-        if (recovery.open(QIODevice::WriteOnly)) {
-            recovery.write(QJsonDocument(boardToJson(board_)).toJson());
-            recovery.commit();
-        }
     };
     boardModel_->onChanged = [this] {
         boardView_->refresh();
@@ -1130,17 +1235,42 @@ void MainWindow::setupWorkspace() {
         connect(action, &QAction::triggered, this, operation);
         return action;
     };
-    add(pcbMenu, QObject::tr("Sincronizar PCB com esquematico"), [this] {
-        if (!boardView_->isEnabled())
-            return;
-        board_.synchronize(document_);
-        if (boardView_->onChanged)
-            boardView_->onChanged();
-        boardView_->refresh();
-        boardView_->fitBoard();
-        boardModel_->update();
-        showWorkspace(1);
+    add(pcbMenu, QObject::tr("Sincronizar PCB com esquematico"), [this] { synchronizeBoard(); });
+    add(pcbMenu, tr("Organizar como o esquematico"), [this] { synchronizeBoard(true); });
+    add(pcbMenu, tr("Ajustar contorno ao circuito"), [this] {
+        if (board_.fitOutline()) {
+            boardView_->commitExternalChange();
+            boardView_->refresh();
+            boardModel_->resetCamera();
+        } else
+            QMessageBox::information(this, tr("Contorno"),
+                                     tr("Nenhum ajuste: placa vazia ou contorno personalizado."));
     });
+    add(pcbMenu, tr("Verificar esquema x PCB"), [this] {
+        auto issues = board_.schematicIssues(document_);
+        QStringList lines;
+        for (const auto& issue : issues)
+            lines << QString::fromStdString(issue);
+        QMessageBox::information(this, tr("Esquema x PCB"),
+                                 lines.empty()
+                                     ? tr("Pinos, pads e redes correspondem ao esquematico.")
+                                     : lines.join("\n"));
+    });
+    add(pcbMenu, tr("Rotear ligacoes simples"), [this] {
+        auto count = board_.routePending(0);
+        if (count) {
+            boardView_->commitExternalChange();
+            boardView_->refresh();
+            boardModel_->update();
+        }
+        QMessageBox::information(this, tr("Roteamento"),
+                                 tr("%1 ligacoes roteadas; %2 pendentes. Revise o DRC.")
+                                     .arg(count)
+                                     .arg(board_.airwires().size()));
+    });
+    add(pcbMenu, tr("Atribuir encapsulamento..."),
+        [this] { boardView_->assignFootprint(document_); });
+    add(pcbMenu, tr("Editar camadas..."), [this] { boardView_->layerProperties(); });
     add(pcbMenu, QObject::tr("Configuracao da placa"), [this] { boardView_->boardProperties(); });
     add(pcbMenu, tr("Adicionar camada de cobre..."), [this] {
         if (board_.layers.size() >= 32)
@@ -1166,6 +1296,104 @@ void MainWindow::setupWorkspace() {
     add(pcbMenu, QObject::tr("Abrir PCB"), [this] { boardView_->loadBoard(); });
     add(pcbMenu, QObject::tr("Verificacao da placa"), [this] { boardView_->checkRules(); });
     add(pcbMenu, QObject::tr("Exportar modelo 3D"), [this] { boardView_->exportModel(); });
+    add(pcbMenu, tr("Fonte com conector fisico..."), [this] {
+        QStringList choices;
+        std::vector<core::Symbol> sources;
+        for (const auto& s : document_.symbols())
+            if (s.kind == core::SymbolKind::VoltageSource ||
+                s.kind == core::SymbolKind::CurrentSource) {
+                choices << QString::fromStdString(s.reference + " / " + s.value);
+                sources.push_back(s);
+            }
+        if (choices.empty()) {
+            QMessageBox::information(this, tr("Alimentacao"), tr("Nenhuma fonte no esquema."));
+            return;
+        }
+        bool ok = false;
+        auto choice = QInputDialog::getItem(
+            this, tr("Conector de alimentacao"),
+            tr("A fonte selecionada sera representada por um conector fisico de 2 pinos na PCB."),
+            choices, 0, false, &ok);
+        if (!ok)
+            return;
+        auto s = sources[choices.indexOf(choice)];
+        s.footprint = "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical";
+        document_.updateSymbol(s);
+        recordChange();
+        synchronizeBoard();
+    });
+    add(pcbMenu, tr("Exportar pacote de fabricacao..."), [this] {
+        if (syncing_) {
+            QMessageBox::information(this, tr("Fabricacao"), tr("Aguarde a sincronizacao da PCB."));
+            return;
+        }
+        QDialog dialog(this);
+        dialog.setWindowTitle(tr("Pacote de fabricacao"));
+        QFormLayout form(&dialog);
+        QLineEdit name(QString::fromStdString(board_.projectName));
+        QLineEdit revision(QString::fromStdString(board_.revision));
+        QLineEdit creator(board_.creator.empty() ? QSettings().value("profile/name").toString()
+                                                 : QString::fromStdString(board_.creator));
+        QLineEdit tool(QSettings().value("production/tool", productionTool()).toString());
+        form.addRow(tr("Projeto"), &name);
+        form.addRow(tr("Revisao"), &revision);
+        form.addRow(tr("Autor"), &creator);
+        form.addRow(tr("Gerador CLI"), &tool);
+        QDialogButtonBox buttons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+        form.addRow(&buttons);
+        connect(&buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+        connect(&buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+        if (dialog.exec() != QDialog::Accepted)
+            return;
+        if (name.text().trimmed().isEmpty() || revision.text().trimmed().isEmpty() ||
+            creator.text().trimmed().isEmpty()) {
+            QMessageBox::warning(this, tr("Fabricacao"), tr("Preencha projeto, revisao e autor."));
+            return;
+        }
+        auto destination = QFileDialog::getExistingDirectory(this, tr("Destino do pacote"));
+        if (destination.isEmpty())
+            return;
+        board_.projectName = name.text().trimmed().toStdString();
+        board_.revision = revision.text().trimmed().toStdString();
+        board_.creator = creator.text().trimmed().toStdString();
+        boardView_->commitExternalChange();
+        QSettings().setValue("production/tool", tool.text());
+        auto* progress = new QProgressDialog(tr("Verificando redes e gerando Gerber e furos..."),
+                                             QString(), 0, 0, this);
+        progress->setWindowModality(Qt::NonModal);
+        progress->show();
+        using ProductionResult = std::pair<QString, QString>;
+        auto* watcher = new QFutureWatcher<ProductionResult>(this);
+        connect(watcher, &QFutureWatcher<ProductionResult>::finished, this,
+                [this, watcher, progress] {
+                    progress->close();
+                    progress->deleteLater();
+                    try {
+                        auto result = watcher->result();
+                        if (!result.second.isEmpty())
+                            throw std::runtime_error(result.second.toStdString());
+                        auto path = result.first;
+                        QMessageBox::information(this, tr("Pacote gerado"),
+                                                 tr("Gerber, furos, BOM, posicionamento e "
+                                                    "metadados:\n%1\n\nRevise os arquivos "
+                                                    "com o fabricante antes de encomendar.")
+                                                     .arg(path));
+                    } catch (const std::exception& e) {
+                        QMessageBox::warning(this, tr("Falha na fabricacao"),
+                                             QString::fromUtf8(e.what()));
+                    }
+                    watcher->deleteLater();
+                });
+        watcher->setFuture(QtConcurrent::run([board = board_, document = document_, destination,
+                                              executable = tool.text()] {
+            try {
+                return ProductionResult{exportProduction(board, document, destination, executable),
+                                        {}};
+            } catch (const std::exception& error) {
+                return ProductionResult{{}, QString::fromUtf8(error.what())};
+            }
+        }));
+    });
     auto* windows = menuBar()->addMenu(QObject::tr("Janelas"));
     const QStringList names = {QObject::tr("Esquematico"), "PCB", QObject::tr("PCB 3D"),
                                QObject::tr("Esquematico 3D")};
@@ -1417,5 +1645,287 @@ void MainWindow::rebuildBoardPanels() {
     for (const auto& name : nets)
         boardNets_->addItem(QString::fromStdString(name), QString::fromStdString(name));
     boardNets_->setCurrentIndex(qMax(0, boardNets_->findData(net)));
+}
+} // namespace levelcad::app
+
+namespace levelcad::app {
+namespace {
+QString pluginDirectory() {
+    return QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/plugins";
+}
+
+struct SyncWork {
+    pcb::Board board;
+    pcb::SyncReport report;
+    qint64 elapsed{};
+};
+} // namespace
+
+void MainWindow::synchronizeBoard(bool reposition) {
+    if (syncing_ || !boardView_->isEnabled()) {
+        if (autoSync_)
+            syncTimer_->start();
+        return;
+    }
+    if (collaboration_ && collaboration_->active() && !hosting_) {
+        statusBar()->showMessage(tr("A sincronizacao compartilhada e feita pelo host."), 5000);
+        return;
+    }
+    syncing_ = true;
+    const auto revision = designRevision_;
+    auto* watcher = new QFutureWatcher<SyncWork>(this);
+    statusBar()->showMessage(tr("Sincronizando encapsulamentos e redes em segundo plano..."));
+    connect(
+        watcher, &QFutureWatcher<SyncWork>::finished, this, [this, watcher, revision, reposition] {
+            try {
+                auto work = watcher->result();
+                if (revision != designRevision_) {
+                    syncing_ = false;
+                    watcher->deleteLater();
+                    statusBar()->showMessage(
+                        tr("O projeto mudou durante o calculo; recalculando a sincronizacao..."));
+                    if (autoSync_)
+                        syncTimer_->start();
+                    else
+                        QTimer::singleShot(0, this,
+                                           [this, reposition] { synchronizeBoard(reposition); });
+                    return;
+                }
+                board_ = std::move(work.board);
+                boardView_->commitExternalChange();
+                boardModel_->update();
+                if (reposition || work.report.added)
+                    boardModel_->resetCamera();
+                rebuildBoardPanels();
+                if (reposition || work.report.added)
+                    boardView_->fitBoard();
+                statusBar()->showMessage(QString("PCB sincronizada em %1 ms: %2 novos / %3 "
+                                                 "atualizados / %4 removidos / %5 sem mapeamento")
+                                             .arg(work.elapsed)
+                                             .arg(work.report.added)
+                                             .arg(work.report.updated)
+                                             .arg(work.report.removed)
+                                             .arg(work.report.unmapped),
+                                         15000);
+                if (!work.report.warnings.empty() && !autoSync_) {
+                    QStringList warnings;
+                    for (const auto& warning : work.report.warnings)
+                        warnings.append(QString::fromStdString(warning));
+                    QMessageBox::information(this, tr("Revisao da sincronizacao"),
+                                             warnings.mid(0, 30).join('\n'));
+                }
+            } catch (const std::exception& error) {
+                QMessageBox::warning(this, tr("Falha na sincronizacao"),
+                                     QString::fromUtf8(error.what()));
+            }
+            syncing_ = false;
+            watcher->deleteLater();
+        });
+    watcher->setFuture(QtConcurrent::run([document = document_, board = board_,
+                                          reposition]() mutable {
+        QElapsedTimer timer;
+        timer.start();
+        // Migrate older native placeholders without changing the user's PCB placement.
+        for (auto& footprint : board.footprints) {
+            if (!footprint.source.starts_with("LevelCAD:"))
+                continue;
+            auto symbol =
+                std::find_if(document.symbols().begin(), document.symbols().end(),
+                             [&](const auto& item) { return item.id == footprint.symbolId; });
+            if (symbol == document.symbols().end())
+                continue;
+            auto prototype = *symbol;
+            prototype.footprint = footprint.source;
+            auto mapped = officialFootprint(prototype);
+            if (mapped && mapped->source != footprint.source) {
+                footprint.pads = mapped->pads;
+                footprint.source = mapped->source;
+                footprint.width = mapped->width;
+                footprint.length = mapped->length;
+                if (footprint.modelName.empty() || footprint.modelName.starts_with(":/models3d/")) {
+                    footprint.mesh.clear();
+                    footprint.texturePng.clear();
+                    footprint.modelName.clear();
+                }
+            }
+        }
+        const bool firstPlacement = board.footprints.empty();
+        auto report = board.synchronize(document, {true, reposition, true, officialFootprint});
+        if (firstPlacement || reposition)
+            board.fitOutline();
+        board.showAirwires = true;
+        board.showReferences = true;
+        board.showPadNumbers = true;
+        for (auto& footprint : board.footprints)
+            if (footprint.mesh.empty() || footprint.modelName.starts_with(":/models3d/")) {
+                try {
+                    assignAutomaticModel(footprint);
+                } catch (const std::exception& error) {
+                    report.warnings.push_back(footprint.reference +
+                                              ": modelo 3D nao carregado: " + error.what());
+                }
+            }
+        return SyncWork{std::move(board), std::move(report), timer.elapsed()};
+    }));
+}
+
+void MainWindow::setupAutomation() {
+    syncTimer_ = new QTimer(this);
+    syncTimer_->setInterval(250);
+    syncTimer_->setSingleShot(true);
+    connect(syncTimer_, &QTimer::timeout, this, [this] { synchronizeBoard(); });
+    auto* automation = menuBar()->addMenu(tr("Automacao"));
+    auto* automatic = automation->addAction(tr("Sincronizacao PCB automatica"));
+    automatic->setCheckable(true);
+    autoSync_ = QSettings().value("pcb/automaticSync", false).toBool();
+    automatic->setChecked(autoSync_);
+    connect(automatic, &QAction::toggled, this, [this](bool enabled) {
+        autoSync_ = enabled;
+        QSettings().setValue("pcb/automaticSync", enabled);
+        if (enabled)
+            syncTimer_->start();
+        else
+            syncTimer_->stop();
+    });
+    auto* dock = new QDockWidget(tr("Assistente de engenharia / IA"), this);
+    dock->setObjectName("AiAssistant");
+    auto* assistant = new AiAssistant;
+    assistant->context = [this] { return commandContext(document_, board_); };
+    assistant->revision = [this] { return designRevision_; };
+    assistant->onProposal = [this](const QJsonObject& plan, std::uint64_t revision) {
+        reviewProposal(plan, revision);
+    };
+    dock->setWidget(assistant);
+    addDockWidget(Qt::RightDockWidgetArea, dock);
+    dock->hide();
+    automation->addAction(dock->toggleViewAction());
+    auto* plugins = automation->addAction(tr("Gerenciador de plugins..."));
+    connect(plugins, &QAction::triggered, this, &MainWindow::managePlugins);
+    auto* plan = automation->addAction(tr("Abrir proposta de comandos JSON..."));
+    connect(plan, &QAction::triggered, this, [this] {
+        auto path = QFileDialog::getOpenFileName(this, tr("Abrir proposta"), {}, "JSON (*.json)");
+        if (path.isEmpty())
+            return;
+        QFile file(path);
+        if (!file.open(QIODevice::ReadOnly) || file.size() > 1024 * 1024)
+            return;
+        QJsonParseError error;
+        auto json = QJsonDocument::fromJson(file.readAll(), &error);
+        if (error.error != QJsonParseError::NoError) {
+            QMessageBox::warning(this, tr("Proposta invalida"), error.errorString());
+            return;
+        }
+        reviewProposal(json.object(), designRevision_);
+    });
+}
+
+void MainWindow::reviewProposal(const QJsonObject& proposal, std::uint64_t revision) {
+    if (revision != designRevision_) {
+        QMessageBox::information(
+            this, tr("Proposta desatualizada"),
+            tr("O projeto mudou. Gere uma nova proposta com o contexto atual."));
+        return;
+    }
+    if (!view_->isEnabled() || !boardView_->isEnabled())
+        return;
+    if (proposal["version"].toInt() != 1 || !proposal["commands"].isArray()) {
+        QMessageBox::warning(this, tr("Proposta invalida"),
+                             tr("Use version 1 e uma lista commands."));
+        return;
+    }
+    auto preview = previewCommands(document_, board_, proposal["commands"].toArray(),
+                                   QSettings().value("profile/name", "Usuario").toString());
+    if (!preview.success) {
+        QMessageBox::warning(this, tr("Comandos rejeitados"), preview.error);
+        return;
+    }
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Revisar alteracoes do CAD"));
+    dialog.resize(700, 540);
+    QVBoxLayout layout(&dialog);
+    QTextBrowser report;
+    report.setPlainText(proposal["summary"].toString() + "\n\n" + preview.changes.join('\n') +
+                        "\n\nAvisos:\n" + preview.warnings.join('\n'));
+    layout.addWidget(&report);
+    QDialogButtonBox buttons(QDialogButtonBox::Apply | QDialogButtonBox::Cancel);
+    layout.addWidget(&buttons);
+    connect(buttons.button(QDialogButtonBox::Apply), &QPushButton::clicked, &dialog,
+            &QDialog::accept);
+    connect(&buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+    if (revision != designRevision_ || !view_->isEnabled()) {
+        statusBar()->showMessage(tr("Proposta desatualizada. Nada foi aplicado."));
+        return;
+    }
+    document_ = std::move(preview.document);
+    board_ = std::move(preview.board);
+    boardView_->resetHistory();
+    boardView_->refresh();
+    view_->refresh();
+    boardModel_->update();
+    rebuildBoardPanels();
+    recordChange();
+    statusBar()->showMessage(tr("Proposta aplicada. Desfazer restaura o projeto anterior."), 5000);
+}
+
+void MainWindow::managePlugins() {
+    QDir().mkpath(pluginDirectory());
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Plugins LevelCAD / API 1"));
+    dialog.resize(650, 480);
+    QVBoxLayout layout(&dialog);
+    QLabel description(
+        tr("Plugins adicionam acoes com comandos validados. Nenhum script ou DLL e executado."));
+    description.setWordWrap(true);
+    layout.addWidget(&description);
+    QListWidget list;
+    layout.addWidget(&list);
+    std::vector<std::pair<QString, PluginAction>> actions;
+    auto reload = [&] {
+        list.clear();
+        actions.clear();
+        QStringList errors;
+        for (const auto& plugin : discoverPlugins(pluginDirectory(), &errors))
+            for (const auto& action : plugin.actions) {
+                list.addItem(plugin.name + " / " + action.name);
+                actions.push_back({plugin.id, action});
+            }
+        if (!errors.isEmpty())
+            statusBar()->showMessage(errors.join("; "), 15000);
+    };
+    reload();
+    QPushButton install(tr("Instalar plugin JSON...")), run(tr("Revisar acao selecionada"));
+    layout.addWidget(&install);
+    layout.addWidget(&run);
+    connect(&install, &QPushButton::clicked, &dialog, [&] {
+        auto path = QFileDialog::getOpenFileName(&dialog, tr("Instalar plugin"), {},
+                                                 "LevelCAD plugin (*.levelplugin.json)");
+        if (path.isEmpty())
+            return;
+        try {
+            auto plugin = readPlugin(path);
+            QFile source(path);
+            if (!source.open(QIODevice::ReadOnly))
+                throw std::runtime_error("Falha ao ler plugin");
+            QSaveFile output(pluginDirectory() + "/" + plugin.id + ".levelplugin.json");
+            auto bytes = source.readAll();
+            if (!output.open(QIODevice::WriteOnly) || output.write(bytes) != bytes.size() ||
+                !output.commit())
+                throw std::runtime_error("Falha ao instalar plugin");
+            reload();
+        } catch (const std::exception& error) {
+            QMessageBox::warning(&dialog, tr("Plugin invalido"), QString::fromUtf8(error.what()));
+        }
+    });
+    connect(&run, &QPushButton::clicked, &dialog, [&] {
+        auto index = list.currentRow();
+        if (index < 0 || index >= static_cast<int>(actions.size()))
+            return;
+        auto action = actions[index].second;
+        reviewProposal({{"version", 1}, {"summary", action.name}, {"commands", action.commands}},
+                       designRevision_);
+    });
+    dialog.exec();
 }
 } // namespace levelcad::app

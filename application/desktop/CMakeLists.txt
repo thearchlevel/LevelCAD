@@ -1,5 +1,6 @@
-﻿add_executable(LevelCAD
+add_executable(LevelCAD
     src/main.cpp
+    src/Launcher.cpp
     resources/branding.qrc
     src/MainWindow.cpp
     src/SchematicView.cpp
@@ -9,6 +10,11 @@
     src/BoardEditor.cpp
     src/ModelView.cpp
     src/MeshLibrary.cpp
+    src/OfficialLibrary.cpp
+    src/Production.cpp
+    src/AiAssistant.cpp
+    src/CadCommands.cpp
+    src/PluginEngine.cpp
     ../../libraries/models3d/sparkfun/models.qrc
     src/Language.cpp
     src/ExportDialog.cpp
@@ -17,7 +23,7 @@
     ../../libraries/kicad/symbols.qrc
 )
 target_include_directories(LevelCAD PRIVATE include)
-target_link_libraries(LevelCAD PRIVATE LevelCAD::Core Qt6::Widgets Qt6::Network)
+target_link_libraries(LevelCAD PRIVATE LevelCAD::Core Qt6::Widgets Qt6::Network Qt6::Concurrent)
 set_target_properties(LevelCAD PROPERTIES WIN32_EXECUTABLE TRUE MACOSX_BUNDLE TRUE)
 
 set_target_properties(LevelCAD PROPERTIES AUTORCC ON)

@@ -1,7 +1,8 @@
-﻿add_library(levelcad_core STATIC
+add_library(levelcad_core STATIC
     core/src/Document.cpp
     connectivity/src/Connectivity.cpp
     pcb/src/Board.cpp
+    pcb/src/Footprints.cpp
     ../exporters/spice/src/SpiceExporter.cpp
 )
 target_include_directories(levelcad_core PUBLIC

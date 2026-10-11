@@ -1,16 +1,16 @@
-build/
-build-*/
+# Compilações
+/build/
+/out/
+/dist/
+
+# Visual Studio
 .vs/
-.vscode/settings.json
-CMakeUserPresets.json
-*.user
 *.obj
-*.o
-*.exe
-*.dll
-*.so
-*.dylib
-*.a
-*.lib
 *.pdb
-.DS_Store
+*.ilk
+*.idb
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake

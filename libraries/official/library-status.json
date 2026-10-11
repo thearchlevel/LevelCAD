@@ -1,0 +1,12 @@
+{
+    "convertedModels":  7256,
+    "originalStepModels":  7256,
+    "importedSymbols":  18981,
+    "sourceInventory":  "inventory.json",
+    "missing":  [
+
+                ],
+    "footprintFiles":  15468,
+    "symbolFiles":  22907,
+    "conversionComplete":  true
+}

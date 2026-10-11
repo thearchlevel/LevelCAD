@@ -1,5 +1,6 @@
 #include <QAction>
 #include <QApplication>
+#include <QDir>
 #include <QDockWidget>
 #include <QFile>
 #include <QFileDialog>
@@ -21,6 +22,7 @@
 #include <levelcad/app/Language.hpp>
 #include <levelcad/app/MainWindow.hpp>
 #include <levelcad/app/ModelView.hpp>
+#include <levelcad/app/OfficialLibrary.hpp>
 #include <levelcad/app/SchematicView.hpp>
 #include <levelcad/app/SymbolLibrary.hpp>
 #include <stdexcept>
@@ -47,14 +49,26 @@ int main(int argc, char** argv) {
         rotated.value = "custom model";
         d.updateSymbol(rotated);
         d.addWire({0, 0}, {1000000, 2000000});
+        auto areaId = d.addNote({1000000, 2000000}, "Power conditioning", "Tester");
+        auto area = d.notes().back();
+        area.background = true;
+        area.widthMm = 62;
+        area.heightMm = 48;
+        area.color = "#458ea6";
+        require(d.updateNote(area), "background area update");
         QString error;
         auto path = dir.filePath("roundtrip.levelsch");
         require(app::saveDocument(d, path, &error), "save");
         core::Document loaded;
-        require(app::loadDocument(loaded, path, &error), "load");
+        if (!app::loadDocument(loaded, path, &error))
+            throw std::runtime_error(error.toStdString());
         require(loaded.symbols().size() == 10 && loaded.wires().size() == 1, "roundtrip count");
         require(loaded.symbols()[4].rotation == 270 && loaded.symbols()[4].value == "custom model",
                 "roundtrip properties");
+        require(loaded.notes().size() == 1 && loaded.notes()[0].id == areaId &&
+                    loaded.notes()[0].background && loaded.notes()[0].widthMm == 62 &&
+                    loaded.notes()[0].heightMm == 48 && loaded.notes()[0].color == "#458ea6",
+                "background areas survive project roundtrip");
         QFile input(path);
         require(input.open(QIODevice::ReadOnly), "read saved JSON");
         auto root = QJsonDocument::fromJson(input.readAll()).object();
@@ -71,6 +85,36 @@ int main(int argc, char** argv) {
         require(!app::loadDocument(loaded, invalid.fileName(), &error) &&
                     loaded.symbols().size() == 10,
                 "invalid load preserves document");
+        if (!app::officialLibraryRoot().isEmpty()) {
+            auto physical = d.symbols()[0];
+            physical.footprint = "Resistor_SMD:R_0603_1608Metric";
+            auto mapped = app::officialFootprint(physical);
+            require(mapped && mapped->pads.size() == 2 && mapped->pads[0].drill == 0 &&
+                        mapped->pads[0].sizeX == 800000,
+                    "exact official footprint pad geometry");
+            require(app::assignOfficialModel(*mapped) && !mapped->mesh.empty(),
+                    "official STEP cache model associates by footprint");
+            double modelMin = 1000, modelMax = -1000;
+            for (const auto& face : mapped->mesh)
+                for (const auto& vertex : face) {
+                    modelMin = std::min(modelMin, vertex.x);
+                    modelMax = std::max(modelMax, vertex.x);
+                    require(vertex.color != 0, "original model face materials preserved");
+                }
+            require(std::abs(modelMax - modelMin - 1.6) < 0.03, "official model millimeter units");
+        }
+        if (!app::officialLibraryRoot().isEmpty()) {
+            for (const auto& category :
+                 {"Capacitor_SMD", "Diode_THT", "LED_THT", "Package_DIP", "Package_QFP",
+                  "Package_TO_SOT_SMD", "Connector_PinHeader_2.54mm"}) {
+                QDir folder(QDir(app::officialLibraryRoot())
+                                .filePath(QString("mesh-cache/") + category + ".3dshapes"));
+                const auto models = folder.entryList({"*.wrl"}, QDir::Files, QDir::Name);
+                require(!models.empty(), "complete local model categories");
+                const auto mesh = app::loadOfficialVrml(folder.filePath(models.front()));
+                require(!mesh.empty(), "representative official model renders");
+            }
+        }
         app::SchematicView view;
         core::Document editable;
         view.setDocument(&editable);
@@ -241,6 +285,44 @@ int main(int argc, char** argv) {
         model.resetCamera();
         application.processEvents();
         require(!model.grab().isNull(), "PCB 3D view renders");
+        pcb::Board depthFixture;
+        depthFixture.width = 30000000;
+        depthFixture.height = 20000000;
+        pcb::Footprint object;
+        object.symbolId = 123;
+        object.position = {15000000, 10000000};
+        object.mesh.push_back({pcb::MeshVertex{-3, -3, -.8, 0xff1010},
+                               pcb::MeshVertex{3, -3, -.8, 0xff1010},
+                               pcb::MeshVertex{0, 3, -.8, 0xff1010}});
+        depthFixture.footprints.push_back(object);
+        app::ModelView depthView(app::ModelView::Mode::Board, &depthFixture, &d);
+        depthView.resize(800, 600);
+        depthView.show();
+        depthView.setCameraPreset(1);
+        auto redPixels = [](const QImage& image) {
+            std::size_t count = 0;
+            for (int y = 70; y < image.height() - 60; ++y)
+                for (int x = 0; x < image.width(); ++x) {
+                    auto color = image.pixelColor(x, y);
+                    if (color.red() > 100 && color.red() > color.green() * 2 &&
+                        color.red() > color.blue() * 2)
+                        ++count;
+                }
+            return count;
+        };
+        application.processEvents();
+        require(redPixels(depthView.grab().toImage()) == 0, "substrate occludes buried mesh");
+        depthFixture.footprints[0].mesh.clear();
+        depthFixture.footprints[0].mesh.push_back({pcb::MeshVertex{-3, -3, .8, 0xff1010},
+                                                   pcb::MeshVertex{3, -3, .8, 0xff1010},
+                                                   pcb::MeshVertex{0, 3, .8, 0xff1010}});
+        depthView.update();
+        application.processEvents();
+        require(redPixels(depthView.grab().toImage()) > 100,
+                "near component survives large substrate face");
+        depthView.setComponentsVisible(false);
+        application.processEvents();
+        require(redPixels(depthView.grab().toImage()) == 0, "component visibility control works");
         if (argc > 1) {
             const auto preview = QString::fromLocal8Bit(argv[1]);
             require(window.grab().save(preview), "preview screenshot");

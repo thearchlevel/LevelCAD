@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <levelcad/connectivity/Connectivity.hpp>
 #include <map>
@@ -120,38 +121,52 @@ Result analyze(const core::Document& document) {
         result.contacts.push_back({first, second, kind});
         sets.join(first, second);
     };
-    for (std::size_t first = 0; first < pins.size(); ++first) {
-        for (std::size_t second = 0; second < first; ++second) {
-            if (pins[first].position == pins[second].position)
-                contact(first, second, ContactKind::CoincidentPins);
-        }
-        for (std::size_t wire = 0; wire < wires.size(); ++wire) {
-            if (pointOnWire(pins[first].position, wires[wire]))
-                contact(first, pins.size() + wire, ContactKind::PinOnWire);
-        }
+    // Indice espacial limitado: trechos muito longos ficam numa lista global para nao explodir a memoria.
+    constexpr core::Coord cellSize=5000000;
+    using Cell=std::pair<core::Coord,core::Coord>;
+    auto cell=[](core::Coord value) { auto q=value/cellSize; return value%cellSize<0?q-1:q; };
+    std::map<Cell,std::vector<std::size_t>> wireCells;
+    std::vector<std::size_t> longWires;
+    auto bounds=[&](const core::Wire& wire) {
+        return std::array<core::Coord,4>{cell(std::min(wire.from.x,wire.to.x)),cell(std::min(wire.from.y,wire.to.y)),cell(std::max(wire.from.x,wire.to.x)),cell(std::max(wire.from.y,wire.to.y))};
+    };
+    for(std::size_t i=0;i<wires.size();++i) {
+        auto box=bounds(wires[i]); auto nx=box[2]-box[0]+1,ny=box[3]-box[1]+1;
+        if(nx>64 || ny>64 || nx*ny>256) {longWires.push_back(i);continue;}
+        for(auto x=box[0];x<=box[2];++x) for(auto y=box[1];y<=box[3];++y) wireCells[{x,y}].push_back(i);
     }
-    for (std::size_t first = 0; first < wires.size(); ++first) {
-        for (std::size_t second = 0; second < first; ++second) {
-            // T junctions and overlaps connect. A crossing with no endpoint stays separate.
-            if (pointOnWire(wires[first].from, wires[second]) ||
-                pointOnWire(wires[first].to, wires[second]) ||
-                pointOnWire(wires[second].from, wires[first]) ||
-                pointOnWire(wires[second].to, wires[first])) {
-                contact(pins.size() + first, pins.size() + second, ContactKind::WireJunction);
-            }
-        }
+    auto candidates=[&](const core::Wire& wire) {
+        std::set<std::size_t> result(longWires.begin(),longWires.end());auto box=bounds(wire);
+        auto nx=box[2]-box[0]+1,ny=box[3]-box[1]+1;
+        if(nx>64 || ny>64 || nx*ny>256) { for(std::size_t i=0;i<wires.size();++i) result.insert(i); }
+        else for(auto x=box[0];x<=box[2];++x) for(auto y=box[1];y<=box[3];++y)
+            if(auto bucket=wireCells.find({x,y});bucket!=wireCells.end()) result.insert(bucket->second.begin(),bucket->second.end());
+        return result;
+    };
+    std::map<Cell,std::vector<std::size_t>> pinsAt;
+    for(std::size_t first=0;first<pins.size();++first) {
+        auto& coincident=pinsAt[{pins[first].position.x,pins[first].position.y}];
+        if(!coincident.empty()) contact(first,coincident.front(),ContactKind::CoincidentPins);
+        coincident.push_back(first);
+        for(auto wire:candidates({0,pins[first].position,pins[first].position}))
+            if(pointOnWire(pins[first].position,wires[wire])) contact(first,pins.size()+wire,ContactKind::PinOnWire);
     }
-    for (std::size_t index = 0; index < labels.size(); ++index) {
-        const auto vertex = pins.size() + wires.size() + index;
-        for (std::size_t pin = 0; pin < pins.size(); ++pin)
-            if (pins[pin].position == labels[index].position)
-                contact(vertex, pin, ContactKind::LabelContact);
-        for (std::size_t wire = 0; wire < wires.size(); ++wire)
-            if (pointOnWire(labels[index].position, wires[wire]))
-                contact(vertex, pins.size() + wire, ContactKind::LabelContact);
-        for (std::size_t other = 0; other < index; ++other)
-            if (labels[other].text == labels[index].text)
-                contact(vertex, pins.size() + wires.size() + other, ContactKind::NamedNet);
+    for(std::size_t first=0;first<wires.size();++first)
+        for(auto second:candidates(wires[first])) {
+            if(second>=first) continue;
+            // Cruzamentos sem extremidade continuam separados; T e sobreposicoes conectam.
+            if(pointOnWire(wires[first].from,wires[second]) || pointOnWire(wires[first].to,wires[second]) || pointOnWire(wires[second].from,wires[first]) || pointOnWire(wires[second].to,wires[first]))
+                contact(pins.size()+first,pins.size()+second,ContactKind::WireJunction);
+        }
+    std::map<std::string,std::size_t> namedLabels;
+    for(std::size_t index=0;index<labels.size();++index) {
+        auto vertex=pins.size()+wires.size()+index;
+        auto found=pinsAt.find({labels[index].position.x,labels[index].position.y});
+        if(found!=pinsAt.end()) for(auto pin:found->second) contact(vertex,pin,ContactKind::LabelContact);
+        for(auto wire:candidates({0,labels[index].position,labels[index].position}))
+            if(pointOnWire(labels[index].position,wires[wire])) contact(vertex,pins.size()+wire,ContactKind::LabelContact);
+        auto [entry,inserted]=namedLabels.emplace(labels[index].text,vertex);
+        if(!inserted) contact(vertex,entry->second,ContactKind::NamedNet);
     }
     for (std::size_t i = 1; i < grounds.size(); ++i)
         contact(grounds[0], grounds[i], ContactKind::GlobalGround);

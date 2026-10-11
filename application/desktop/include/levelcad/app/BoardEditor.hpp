@@ -12,6 +12,10 @@ class BoardEditor final : public QGraphicsView {
   public:
     explicit BoardEditor(pcb::Board* board, QWidget* parent = nullptr);
     void refresh();
+    void commitExternalChange();
+    void resetHistory();
+    void layerProperties();
+    void assignFootprint(const core::Document& document);
     void fitBoard();
     void setRouting(bool enabled);
     void setLayer(int layer);

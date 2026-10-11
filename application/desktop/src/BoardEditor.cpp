@@ -1,13 +1,20 @@
+#include <QBuffer>
+#include <QCheckBox>
+#include <QColorDialog>
 #include <QComboBox>
 #include <QContextMenuEvent>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QDir>
 #include <QDoubleSpinBox>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFormLayout>
 #include <QGraphicsItemGroup>
 #include <QGraphicsSimpleTextItem>
+#include <QHeaderView>
+#include <QImageReader>
+#include <QInputDialog>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -20,6 +27,7 @@
 #include <QPainterPath>
 #include <QPushButton>
 #include <QSaveFile>
+#include <QTableWidget>
 #include <QWheelEvent>
 #include <algorithm>
 #include <cmath>
@@ -27,6 +35,8 @@
 #include <levelcad/app/BoardIO.hpp>
 #include <levelcad/app/ExportDialog.hpp>
 #include <levelcad/app/MeshLibrary.hpp>
+#include <levelcad/app/OfficialLibrary.hpp>
+#include <levelcad/pcb/Footprints.hpp>
 
 namespace levelcad::app {
 namespace {
@@ -114,6 +124,8 @@ std::optional<std::pair<core::Point, std::string>> BoardEditor::nearestPad(QPoin
     std::optional<std::pair<core::Point, std::string>> result;
     for (const auto& footprint : board_->footprints)
         for (const auto& pad : footprint.pads) {
+            if (!(pad.layerMask & (1u << layer_)))
+                continue;
             auto location = board_->padPosition(footprint, pad);
             auto distance = QLineF(position, scenePoint(location)).length();
             if (distance < closest) {
@@ -225,6 +237,18 @@ void BoardEditor::mousePressEvent(QMouseEvent* event) {
     if (end == *routeStart_)
         return;
     const core::Point bend{end.x, routeStart_->y};
+    auto proposed = *board_;
+    if (*routeStart_ != bend &&
+        !proposed.canPlaceTrack({0, *routeStart_, bend, layer_, traceWidth_, routeNet_})) {
+        QMessageBox::warning(this, tr("Trilha bloqueada"),
+                             tr("O trecho viola a separacao ou os limites da placa."));
+        return;
+    }
+    if (bend != end && !proposed.canPlaceTrack({0, bend, end, layer_, traceWidth_, routeNet_})) {
+        QMessageBox::warning(this, tr("Trilha bloqueada"),
+                             tr("O trecho viola a separacao ou os limites da placa."));
+        return;
+    }
     if (*routeStart_ != bend)
         board_->addTrack(*routeStart_, bend, layer_, routeNet_, traceWidth_);
     if (bend != end)
@@ -295,7 +319,7 @@ void BoardEditor::keyPressEvent(QKeyEvent* event) {
     }
     if (event->key() == Qt::Key_V && routeStart_) {
         board_->addVia(*routeStart_, routeNet_);
-        layer_ = 1 - layer_;
+        layer_ = layer_ == 0 ? 1 : 0;
         record();
         return;
     }
@@ -382,11 +406,86 @@ void BoardEditor::editSelected() {
                     model.addItem(tr("Modelo generico"), QString());
                     for (const auto& name : bundledModels())
                         model.addItem(name, ":/models3d/" + name);
+                    auto libraryRoot = officialLibraryRoot();
+                    if (!libraryRoot.isEmpty()) {
+                        QDir cache(QDir(libraryRoot).filePath("mesh-cache"));
+                        for (const auto& folder :
+                             cache.entryList({"*.3dshapes"}, QDir::Dirs, QDir::Name)) {
+                            QDir category(cache.filePath(folder));
+                            for (const auto& file :
+                                 category.entryList({"*.wrl"}, QDir::Files, QDir::Name))
+                                model.addItem(folder + "/" + file, category.filePath(file));
+                        }
+                    }
+                    model.setEditable(true);
                     auto current = QString::fromStdString(footprint.modelName);
                     if (!current.isEmpty() && model.findData(current) < 0)
                         model.addItem(tr("Modelo personalizado"), current);
                     model.setCurrentIndex(qMax(0, model.findData(current)));
                     layout.addRow(tr("Modelo 3D"), &model);
+                    QDoubleSpinBox rotateX, rotateY, rotateZ, scale;
+                    for (auto* spin : {&rotateX, &rotateY, &rotateZ}) {
+                        spin->setRange(-360, 360);
+                        spin->setSuffix(" deg");
+                    }
+                    rotateX.setValue(footprint.modelRotationX);
+                    rotateY.setValue(footprint.modelRotationY);
+                    rotateZ.setValue(footprint.modelRotationZ);
+                    scale.setRange(.01, 100);
+                    scale.setDecimals(3);
+                    scale.setValue(footprint.modelScale);
+                    layout.addRow(tr("Rotacao modelo X"), &rotateX);
+                    layout.addRow(tr("Rotacao modelo Y"), &rotateY);
+                    layout.addRow(tr("Rotacao modelo Z"), &rotateZ);
+                    layout.addRow(tr("Escala do modelo"), &scale);
+                    auto body = QColor(text(footprint.bodyColor));
+                    QPushButton bodyButton(tr("Cor do material...")),
+                        textureButton(tr("Importar textura PNG/JPG...")),
+                        clearTexture(tr("Remover textura"));
+                    auto texture = footprint.texturePng;
+                    connect(&bodyButton, &QPushButton::clicked, &dialog, [&] {
+                        auto color =
+                            QColorDialog::getColor(body, &dialog, tr("Material do componente"));
+                        if (color.isValid())
+                            body = color;
+                    });
+                    connect(&textureButton, &QPushButton::clicked, &dialog, [&] {
+                        auto path =
+                            QFileDialog::getOpenFileName(&dialog, tr("Textura do componente"), {},
+                                                         "Imagem (*.png *.jpg *.jpeg)");
+                        if (path.isEmpty())
+                            return;
+                        QImageReader reader(path);
+                        auto size = reader.size();
+                        if (!size.isValid() || size.width() > 2048 || size.height() > 2048) {
+                            QMessageBox::warning(&dialog, tr("Textura"),
+                                                 tr("Use uma imagem de ate 2048 x 2048 pixels."));
+                            return;
+                        }
+                        auto image = reader.read();
+                        if (image.isNull()) {
+                            QMessageBox::warning(&dialog, tr("Textura"), reader.errorString());
+                            return;
+                        }
+                        QByteArray bytes;
+                        QBuffer buffer(&bytes);
+                        buffer.open(QIODevice::WriteOnly);
+                        image.save(&buffer, "PNG");
+                        if (bytes.size() > 2 * 1024 * 1024) {
+                            QMessageBox::warning(&dialog, tr("Textura"),
+                                                 tr("Textura acima de 2 MB."));
+                            return;
+                        }
+                        texture = bytes.toBase64().toStdString();
+                        textureButton.setText(tr("Textura carregada"));
+                    });
+                    connect(&clearTexture, &QPushButton::clicked, &dialog, [&] {
+                        texture.clear();
+                        textureButton.setText(tr("Importar textura PNG/JPG..."));
+                    });
+                    layout.addRow(&bodyButton);
+                    layout.addRow(&textureButton);
+                    layout.addRow(&clearTexture);
                     QDoubleSpinBox offsetX, offsetY, offsetZ;
                     for (auto* spin : {&offsetX, &offsetY, &offsetZ}) {
                         spin->setRange(-500, 500);
@@ -409,8 +508,9 @@ void BoardEditor::editSelected() {
                             model.setCurrentIndex(model.count() - 1);
                         }
                     });
-                    QLabel note(tr("Footprint generico com pads passantes. Confira o "
-                                   "encapsulamento antes de fabricar."));
+                    QLabel note(
+                        tr("Confira a numeracao e as medidas do encapsulamento "
+                           "antes de fabricar. Texturas sao projetadas sobre a superficie."));
                     note.setWordWrap(true);
                     layout.addRow(&note);
                     QDialogButtonBox buttons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
@@ -433,6 +533,12 @@ void BoardEditor::editSelected() {
                             return;
                         }
                     }
+                    footprint.modelRotationX = rotateX.value();
+                    footprint.modelRotationY = rotateY.value();
+                    footprint.modelRotationZ = rotateZ.value();
+                    footprint.modelScale = scale.value();
+                    footprint.bodyColor = body.name().toStdString();
+                    footprint.texturePng = texture;
                     footprint.modelOffsetX = offsetX.value();
                     footprint.modelOffsetY = offsetY.value();
                     footprint.modelOffsetZ = offsetZ.value();
@@ -464,11 +570,40 @@ void BoardEditor::boardProperties() {
     layout.addRow(tr("Altura"), &h);
     layout.addRow(tr("Espessura"), &t);
     layout.addRow(tr("Separacao minima"), &c);
+    QColor mask(text(board_->solderMask)), silk(text(board_->silkColor)),
+        finish(text(board_->finishColor));
+    QPushButton maskButton(tr("Cor da mascara...")), silkButton(tr("Cor da serigrafia...")),
+        finishButton(tr("Cor do acabamento..."));
+    auto pick = [&](QColor& target) {
+        auto value = QColorDialog::getColor(target, &dialog, tr("Aparencia da PCB"));
+        if (value.isValid())
+            target = value;
+    };
+    connect(&maskButton, &QPushButton::clicked, &dialog, [&] { pick(mask); });
+    connect(&silkButton, &QPushButton::clicked, &dialog, [&] { pick(silk); });
+    connect(&finishButton, &QPushButton::clicked, &dialog, [&] { pick(finish); });
+    layout.addRow(&maskButton);
+    layout.addRow(&silkButton);
+    layout.addRow(&finishButton);
+    QCheckBox airwires(tr("Mostrar ligacoes pendentes")), references(tr("Mostrar referencias")),
+        padNumbers(tr("Mostrar numeros dos pads"));
+    airwires.setChecked(board_->showAirwires);
+    references.setChecked(board_->showReferences);
+    padNumbers.setChecked(board_->showPadNumbers);
+    layout.addRow(&airwires);
+    layout.addRow(&references);
+    layout.addRow(&padNumbers);
     QDialogButtonBox buttons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     layout.addRow(&buttons);
     connect(&buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
     connect(&buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
     if (dialog.exec() == QDialog::Accepted) {
+        board_->solderMask = mask.name().toStdString();
+        board_->silkColor = silk.name().toStdString();
+        board_->finishColor = finish.name().toStdString();
+        board_->showAirwires = airwires.isChecked();
+        board_->showReferences = references.isChecked();
+        board_->showPadNumbers = padNumbers.isChecked();
         board_->width = static_cast<core::Coord>(w.value() * core::nmPerMm);
         board_->height = static_cast<core::Coord>(h.value() * core::nmPerMm);
         board_->thickness = static_cast<core::Coord>(t.value() * core::nmPerMm);
@@ -541,12 +676,13 @@ void BoardEditor::refresh() {
     preview_ = nullptr;
     scene_.clear();
     scene_.addRect(0, 0, double(board_->width) / 100000, double(board_->height) / 100000,
-                   QPen(QColor("#e3c17c"), 2), QBrush(QColor("#153d33")));
-    for (const auto& airwire : board_->airwires()) {
-        auto* item = scene_.addLine(QLineF(scenePoint(airwire.from), scenePoint(airwire.to)),
-                                    QPen(QColor("#d0d48b"), 0, Qt::DashLine));
-        item->setAcceptedMouseButtons(Qt::NoButton);
-    }
+                   QPen(QColor("#e3c17c"), 2), QBrush(QColor(text(board_->solderMask))));
+    if (board_->showAirwires)
+        for (const auto& airwire : board_->airwires()) {
+            auto* item = scene_.addLine(QLineF(scenePoint(airwire.from), scenePoint(airwire.to)),
+                                        QPen(QColor("#d0d48b"), 0, Qt::DashLine));
+            item->setAcceptedMouseButtons(Qt::NoButton);
+        }
     for (const auto& track : board_->tracks) {
         auto layer = std::find_if(board_->layers.begin(), board_->layers.end(),
                                   [&](const auto& layer) { return layer.index == track.layer; });
@@ -581,25 +717,27 @@ void BoardEditor::refresh() {
                 const auto w = double(pad.sizeX ? pad.sizeX : pad.diameter) / 100000,
                            h = double(pad.sizeY ? pad.sizeY : pad.diameter) / 100000;
                 auto* copper = scene_.addRect(-w / 2, -h / 2, w, h, QPen(QColor("#edc879")),
-                                              QBrush(QColor("#d5aa55")));
+                                              QBrush(QColor(text(board_->finishColor))));
                 copper->setPos(p);
                 copper->setRotation(pad.rotation);
                 group->addToGroup(copper);
             } else
                 group->addToGroup(scene_.addEllipse(p.x() - radius, p.y() - radius, 2 * radius,
                                                     2 * radius, QPen(QColor("#edc879")),
-                                                    QBrush(QColor("#d5aa55"))));
+                                                    QBrush(QColor(text(board_->finishColor)))));
             const double hole = double(pad.drill) / 200000;
             group->addToGroup(scene_.addEllipse(p.x() - hole, p.y() - hole, 2 * hole, 2 * hole,
                                                 QPen(Qt::NoPen), QBrush(QColor("#111b25"))));
             auto* number = scene_.addSimpleText(QString::number(pad.number));
-            number->setBrush(QColor("#ffffff"));
+            number->setVisible(board_->showPadNumbers);
+            number->setBrush(QColor(text(board_->silkColor)));
             number->setScale(0.6);
             number->setPos(p + QPointF(7, -12));
             group->addToGroup(number);
         }
         auto* reference = scene_.addSimpleText(text(footprint.reference));
-        reference->setBrush(QColor("#edf3ff"));
+        reference->setVisible(board_->showReferences);
+        reference->setBrush(QColor(text(board_->silkColor)));
         reference->setPos(-30, -double(footprint.length) / 200000 - 22);
         group->addToGroup(reference);
         group->setPos(scenePoint(footprint.position));
@@ -663,5 +801,137 @@ void BoardEditor::redrawPresence() {
             presenceItems_.push_back(label);
         }
     }
+}
+} // namespace levelcad::app
+
+namespace levelcad::app {
+void BoardEditor::commitExternalChange() {
+    record();
+}
+
+void BoardEditor::resetHistory() {
+    history_ = {*board_};
+    index_ = 0;
+    routeStart_.reset();
+}
+
+void BoardEditor::assignFootprint(const core::Document& document) {
+    if (!isEnabled())
+        return;
+    auto selection = scene_.selectedItems();
+    if (selection.empty()) {
+        QMessageBox::information(this, tr("Encapsulamento"), tr("Selecione um componente na PCB."));
+        return;
+    }
+    bool ok = false;
+    QStringList packages;
+    for (const auto& package : pcb::footprintCatalog())
+        packages.append(QString::fromStdString(package));
+    auto root = officialLibraryRoot();
+    if (!root.isEmpty()) {
+        QDir library(QDir(root).filePath("kicad-footprints"));
+        for (const auto& folder : library.entryList({"*.pretty"}, QDir::Dirs, QDir::Name)) {
+            QDir category(library.filePath(folder));
+            for (const auto& file : category.entryList({"*.kicad_mod"}, QDir::Files, QDir::Name))
+                packages.append(QFileInfo(folder).completeBaseName() + ":" +
+                                QFileInfo(file).completeBaseName());
+        }
+    }
+    auto package = QInputDialog::getItem(this, tr("Encapsulamento"), tr("Pacote fisico"), packages,
+                                         0, true, &ok);
+    if (!ok)
+        return;
+    auto candidate = *board_;
+    for (auto* item : selection) {
+        if (item->data(1).toString() != "footprint")
+            continue;
+        auto id = item->data(0).toULongLong();
+        auto symbol = std::find_if(document.symbols().begin(), document.symbols().end(),
+                                   [&](const auto& s) { return s.id == id; });
+        if (symbol == document.symbols().end())
+            continue;
+        auto prototype = *symbol;
+        prototype.footprint = package.toStdString();
+        auto mapped = officialFootprint(prototype);
+        if (!mapped) {
+            QMessageBox::warning(
+                this, tr("Encapsulamento incompativel"),
+                tr("Os numeros dos pads nao correspondem aos pinos deste simbolo."));
+            return;
+        }
+        for (auto& existing : candidate.footprints)
+            if (existing.symbolId == id) {
+                for (auto& pad : mapped->pads)
+                    for (const auto& old : existing.pads)
+                        if (old.number == pad.number)
+                            pad.net = old.net;
+                existing.pads = mapped->pads;
+                existing.source = mapped->source;
+                existing.width = mapped->width;
+                existing.length = mapped->length;
+                existing.height = mapped->height;
+                existing.mesh.clear();
+                existing.texturePng.clear();
+                assignAutomaticModel(existing);
+            }
+    }
+    *board_ = std::move(candidate);
+    record();
+}
+
+void BoardEditor::layerProperties() {
+    if (!isEnabled())
+        return;
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Camadas de cobre"));
+    dialog.resize(600, 480);
+    QVBoxLayout layout(&dialog);
+    QTableWidget table(static_cast<int>(board_->layers.size()), 4);
+    table.setHorizontalHeaderLabels({tr("Indice"), tr("Nome"), tr("Cor"), tr("Visivel")});
+    table.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    for (int i = 0; i < table.rowCount(); ++i) {
+        const auto& layer = board_->layers[i];
+        auto* index = new QTableWidgetItem(QString::number(layer.index));
+        index->setFlags(index->flags() & ~Qt::ItemIsEditable);
+        table.setItem(i, 0, index);
+        table.setItem(i, 1, new QTableWidgetItem(text(layer.name)));
+        table.setItem(i, 2, new QTableWidgetItem(text(layer.color)));
+        auto* visible = new QTableWidgetItem;
+        visible->setCheckState(layer.visible ? Qt::Checked : Qt::Unchecked);
+        table.setItem(i, 3, visible);
+    }
+    connect(&table, &QTableWidget::cellDoubleClicked, &dialog, [&](int row, int column) {
+        if (column == 2) {
+            auto color = QColorDialog::getColor(QColor(table.item(row, 2)->text()), &dialog,
+                                                tr("Cor da camada"));
+            if (color.isValid())
+                table.item(row, 2)->setText(color.name());
+        }
+    });
+    layout.addWidget(&table);
+    QLabel hint(tr("Edite os nomes. Duplo clique na cor abre a paleta. Indices preservam o "
+                   "roteamento existente."));
+    hint.setWordWrap(true);
+    layout.addWidget(&hint);
+    QDialogButtonBox buttons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    layout.addWidget(&buttons);
+    connect(&buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(&buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+    auto layers = board_->layers;
+    for (int i = 0; i < table.rowCount(); ++i) {
+        auto name = table.item(i, 1)->text().trimmed();
+        QColor color(table.item(i, 2)->text());
+        if (name.isEmpty() || !color.isValid()) {
+            QMessageBox::warning(this, tr("Camada invalida"), tr("Informe nomes e cores validos."));
+            return;
+        }
+        layers[i].name = name.toStdString();
+        layers[i].color = color.name().toStdString();
+        layers[i].visible = table.item(i, 3)->checkState() == Qt::Checked;
+    }
+    board_->layers = std::move(layers);
+    record();
 }
 } // namespace levelcad::app

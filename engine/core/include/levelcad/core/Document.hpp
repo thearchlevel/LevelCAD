@@ -56,6 +56,10 @@ struct Note {
     Point position;
     std::string text, author;
     bool electrical{};
+    // Areas are visual annotations; they never change electrical connectivity.
+    bool background{};
+    double widthMm{40.0}, heightMm{30.0};
+    std::string color{"#4b8096"};
 };
 
 struct Pin {

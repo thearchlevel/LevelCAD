@@ -26,7 +26,8 @@ class SchematicView final : public QGraphicsView {
         Pan,
         Library,
         Comment,
-        NetLabel
+        NetLabel,
+        Area
     };
     explicit SchematicView(QWidget* parent = nullptr);
     void setTool(Tool tool);

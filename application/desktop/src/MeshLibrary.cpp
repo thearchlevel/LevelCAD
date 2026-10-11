@@ -1,12 +1,19 @@
+#include <QBuffer>
 #include <QFile>
+#include <QImage>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMap>
+#include <QMutex>
+#include <QMutexLocker>
+#include <QPainter>
 #include <QRegularExpression>
 #include <QtEndian>
 #include <bit>
 #include <cmath>
 #include <levelcad/app/MeshLibrary.hpp>
+#include <levelcad/app/OfficialLibrary.hpp>
 #include <limits>
 #include <stdexcept>
 
@@ -87,9 +94,87 @@ std::vector<pcb::MeshTriangle> loadStl(const QString& path) {
 }
 
 void assignMesh(pcb::Footprint& footprint, const QString& path) {
-    auto mesh = loadStl(path);
-    footprint.mesh = std::move(mesh);
+    static QMutex mutex;
+    static QMap<QString, pcb::SharedMesh> cache;
+    QMutexLocker lock(&mutex);
+    if (!cache.contains(path)) {
+        pcb::SharedMesh mesh;
+        mesh = path.endsWith(".wrl", Qt::CaseInsensitive) ? loadOfficialVrml(path) : loadStl(path);
+        if (cache.size() > 64)
+            cache.clear();
+        cache[path] = std::move(mesh);
+    }
+    footprint.mesh = cache[path];
     footprint.modelName = path.toStdString();
     footprint.modelOffsetX = footprint.modelOffsetY = footprint.modelOffsetZ = 0;
+    footprint.modelRotationX = footprint.modelRotationY = footprint.modelRotationZ = 0;
+    footprint.modelScale = 1;
+}
+
+void assignAutomaticModel(pcb::Footprint& footprint) {
+    if (assignOfficialModel(footprint))
+        return;
+    auto package = QString::fromStdString(footprint.source).toLower();
+    QString file;
+    if (package.contains("axial"))
+        file = "AXIAL-0_3.STL";
+    else if (package.contains("r_1206"))
+        file = "R1206.stl";
+    else if (package.contains("r_0402"))
+        file = "0402-RES.stl";
+    else if (package.contains("r_0603"))
+        file = "0603-RES.stl";
+    else if (package.contains("c_0402"))
+        file = "0402-CAP.stl";
+    else if (package.contains("c_0603"))
+        file = "0603-CAP.stl";
+    else if (package.contains("c_0805"))
+        file = "0805-CAP.stl";
+    else if (package.contains("c_1206"))
+        file = "1206-CAP.stl";
+    else if (package.contains("soic-8"))
+        file = "SOIC-8.stl";
+    else if (package.contains("sot-223"))
+        file = "SOT-223.STL";
+    else if (package.contains("sot-23"))
+        file = "SOT23-3.STL";
+    else if (package.contains("tqfp-48"))
+        file = "TQFP-48.STL";
+    else if (package.contains("header_1x08"))
+        file = "1X08_PTH.STL";
+    if (!file.isEmpty() && footprint.mesh.empty())
+        assignMesh(footprint, ":/models3d/" + file);
+    auto ref = QString::fromStdString(footprint.reference);
+    footprint.bodyColor = ref.startsWith("C")   ? "#c4a27c"
+                          : ref.startsWith("D") ? "#516d5f"
+                                                : "#303744";
+    if (!footprint.texturePng.empty())
+        return;
+    // Texturas autorais: marcacao do componente e bandas; os STLs originais nao possuem UVs.
+    QImage texture(256, 128, QImage::Format_ARGB32_Premultiplied);
+    texture.fill(QColor(QString::fromStdString(footprint.bodyColor)));
+    QPainter paint(&texture);
+    if (ref.startsWith("R") && package.contains("axial")) {
+        texture.fill(QColor("#b89468"));
+        for (auto band : std::vector<std::pair<int, QColor>>{{45, QColor("#493026")},
+                                                             {70, Qt::black},
+                                                             {95, QColor("#b54235")},
+                                                             {200, QColor("#cfad5c")}})
+            paint.fillRect(band.first, 0, 14, 128, band.second);
+    } else {
+        paint.setPen(QColor("#ebedef"));
+        paint.setFont(QFont("Segoe UI", 15, QFont::Bold));
+        paint.drawText(texture.rect().adjusted(12, 12, -12, -12), Qt::AlignCenter,
+                       QString::fromStdString(footprint.value));
+        paint.setBrush(QColor("#dcdfe8"));
+        paint.setPen(Qt::NoPen);
+        paint.drawEllipse(QPoint(18, 18), 5, 5);
+    }
+    paint.end();
+    QByteArray bytes;
+    QBuffer buffer(&bytes);
+    buffer.open(QIODevice::WriteOnly);
+    texture.save(&buffer, "PNG");
+    footprint.texturePng = bytes.toBase64().toStdString();
 }
 } // namespace levelcad::app

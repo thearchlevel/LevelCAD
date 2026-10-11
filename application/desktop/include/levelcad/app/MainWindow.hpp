@@ -17,11 +17,12 @@ class QMdiArea;
 class QMdiSubWindow;
 class QProcess;
 class QComboBox;
+class QTimer;
 
 namespace levelcad::app {
 class MainWindow final : public QMainWindow {
   public:
-    MainWindow();
+    explicit MainWindow(std::function<void(int,const QString&)> progress = {});
     ~MainWindow() override;
 
     void openProject(const QString& file) {
@@ -33,6 +34,13 @@ class MainWindow final : public QMainWindow {
 
   private:
     bool confirmDiscard();
+    void synchronizeBoard(bool reposition=false);
+    void setupAutomation();
+    void reviewProposal(const QJsonObject& proposal,std::uint64_t revision);
+    void managePlugins();
+    std::uint64_t designRevision_{};
+    bool syncing_{}, autoSync_{};
+    QTimer* syncTimer_{};
     void hostProject();
     void rebuildBoardPanels();
     void stopHosting();
@@ -85,6 +93,7 @@ class MainWindow final : public QMainWindow {
     QMenu* recentMenu_{};
     QString path_;
     std::vector<core::Document> history_;
+    std::vector<pcb::Board> boardHistory_;
     int historyIndex_{}, savedIndex_{};
 };
 } // namespace levelcad::app

@@ -1,0 +1,10 @@
+{
+  "format": "levelcad-plugin",
+  "apiVersion": 1,
+  "id": "archlevel.blue-board",
+  "name": "Blue PCB preset",
+  "description": "Appearance preset with validated native CAD commands.",
+  "actions": [{"name": "Apply blue solder mask", "commands": [
+    {"op": "board_settings", "mask_color": "#174873", "silk_color": "#f0f4fa"}
+  ]}]
+}

@@ -1,7 +1,9 @@
+#include <QColorDialog>
 #include <QComboBox>
 #include <QContextMenuEvent>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QGraphicsItemGroup>
 #include <QGraphicsSimpleTextItem>
@@ -16,6 +18,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QPdfWriter>
+#include <QPushButton>
 #include <QSettings>
 #include <QWheelEvent>
 #include <algorithm>
@@ -107,6 +110,25 @@ QPointF SchematicView::snap(QPointF position) const {
                 }
             }
         }
+        if (!pinPosition)
+            for (const auto& wire : document_->wires()) {
+                auto a = toScene(wire.from), b = toScene(wire.to);
+                QPointF candidate;
+                if (wire.from.x == wire.to.x)
+                    candidate = {a.x(), std::clamp(position.y(), std::min(a.y(), b.y()),
+                                                   std::max(a.y(), b.y()))};
+                else if (wire.from.y == wire.to.y)
+                    candidate = {
+                        std::clamp(position.x(), std::min(a.x(), b.x()), std::max(a.x(), b.x())),
+                        a.y()};
+                else
+                    continue;
+                auto length = QLineF(position, candidate).length();
+                if (length < closest) {
+                    closest = length;
+                    pinPosition = candidate;
+                }
+            }
         if (pinPosition)
             return *pinPosition;
     }
@@ -178,7 +200,18 @@ void SchematicView::mousePressEvent(QMouseEvent* e) {
         return;
     }
     auto p = snap(mapToScene(e->pos()));
-    if (tool_ == Tool::Comment || tool_ == Tool::NetLabel) {
+    if (tool_ == Tool::Area) {
+        auto id = document_->addNote(
+            toCore(p), "Novo bloco",
+            QSettings().value("profile/name", "Usuario").toString().toStdString());
+        auto note = document_->notes().back();
+        note.background = true;
+        document_->updateNote(note);
+        changed();
+        selectObject(id);
+        editSelected();
+        setTool(Tool::Select);
+    } else if (tool_ == Tool::Comment || tool_ == Tool::NetLabel) {
         bool ok = false;
         auto text = QInputDialog::getMultiLineText(this, tr("Comentario"),
                                                    tr("Texto do comentario"), {}, &ok);
@@ -302,6 +335,7 @@ void SchematicView::contextMenuEvent(QContextMenuEvent* event) {
     }
     menu.addAction(tr("Selecionar"), this, [this] { setTool(Tool::Select); });
     menu.addAction(tr("Ligacao"), this, [this] { setTool(Tool::Wire); });
+    menu.addAction(tr("Area de fundo"), this, [this] { setTool(Tool::Area); });
     menu.addAction(tr("Ajustar desenho"), this, &SchematicView::fitDrawing);
     menu.exec(event->globalPos());
 }
@@ -400,6 +434,43 @@ void SchematicView::editSelected() {
         return;
     for (auto note : document_->notes())
         if (note.id == ids[0]) {
+            if (note.background) {
+                QDialog dialog(this);
+                dialog.setWindowTitle(tr("Area de fundo"));
+                QFormLayout layout(&dialog);
+                QLineEdit title(QString::fromStdString(note.text));
+                QDoubleSpinBox width, height;
+                for (auto* size : {&width, &height}) {
+                    size->setRange(1, 1000);
+                    size->setSuffix(" mm");
+                }
+                width.setValue(note.widthMm);
+                height.setValue(note.heightMm);
+                QColor color(QString::fromStdString(note.color));
+                QPushButton choose(tr("Escolher cor"));
+                connect(&choose, &QPushButton::clicked, &dialog, [&] {
+                    auto selected = QColorDialog::getColor(color, &dialog, tr("Cor da area"));
+                    if (selected.isValid())
+                        color = selected;
+                });
+                layout.addRow(tr("Titulo"), &title);
+                layout.addRow(tr("Largura"), &width);
+                layout.addRow(tr("Altura"), &height);
+                layout.addRow(tr("Cor"), &choose);
+                QDialogButtonBox buttons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+                layout.addRow(&buttons);
+                connect(&buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+                connect(&buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+                if (dialog.exec() == QDialog::Accepted && !title.text().trimmed().isEmpty()) {
+                    note.text = title.text().trimmed().toStdString();
+                    note.widthMm = width.value();
+                    note.heightMm = height.value();
+                    note.color = color.name().toStdString();
+                    document_->updateNote(note);
+                    changed();
+                }
+                return;
+            }
             bool ok = false;
             auto text =
                 QInputDialog::getMultiLineText(this, tr("Comentario"), tr("Texto do comentario"),
@@ -505,6 +576,23 @@ void SchematicView::refresh() {
         item->setZValue(-1);
     }
     for (const auto& note : document_->notes()) {
+        if (note.background) {
+            // Keep the block behind the circuit so selecting a component still works normally.
+            QColor border(QString::fromStdString(note.color)), fill = border;
+            fill.setAlpha(18);
+            auto* area = scene_.addRect(0, 0, note.widthMm * sceneUnitsPerMm,
+                                        note.heightMm * sceneUnitsPerMm,
+                                        QPen(border, 1, Qt::DashLine), QBrush(fill));
+            area->setPos(toScene(note.position));
+            area->setZValue(-20);
+            area->setData(0, QVariant::fromValue<qulonglong>(note.id));
+            area->setFlags(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable);
+            auto* title = new QGraphicsSimpleTextItem(QString::fromStdString(note.text), area);
+            title->setBrush(border);
+            title->setPos(8, 6);
+            title->setAcceptedMouseButtons(Qt::NoButton);
+            continue;
+        }
         auto* item = scene_.addText(
             QString::fromStdString(note.electrical ? "[" + note.text + "]" : note.text));
         item->setDefaultTextColor(lightTheme_ ? QColor("#344777") : QColor("#b8caff"));

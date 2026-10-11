@@ -1,3 +1,5 @@
+#include <QCoreApplication>
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
@@ -251,6 +253,66 @@ LibraryImport loadKiCadLibraryText(const QString& text, const QString& category)
 
 std::vector<LibraryEntry> bundledLibrary() {
     std::vector<LibraryEntry> entries;
+    QString local;
+    for (auto base : {QCoreApplication::applicationDirPath(), QDir::currentPath()}) {
+        QDir directory(base);
+        for (int depth = 0; depth < 8; ++depth) {
+            if (directory.exists("libraries/official/kicad-symbols")) {
+                local = directory.filePath("libraries/official/kicad-symbols");
+                break;
+            }
+            if (!directory.cdUp())
+                break;
+        }
+        if (!local.isEmpty())
+            break;
+    }
+    if (!local.isEmpty()) {
+        auto cache = QDir(local).filePath("../symbol-cache");
+        if (QDir(cache).exists() && !QDir(cache).entryList({"*.kicad_sym"}, QDir::Files).empty()) {
+            static QString cachedPath;
+            static std::vector<LibraryEntry> cachedEntries;
+            if (cachedPath == cache && !cachedEntries.empty())
+                return cachedEntries;
+            for (const auto& file :
+                 QDir(cache).entryList({"*.kicad_sym"}, QDir::Files, QDir::Name)) {
+                auto library = loadKiCadLibrary(QDir(cache).filePath(file));
+                entries.insert(entries.end(), std::make_move_iterator(library.entries.begin()),
+                               std::make_move_iterator(library.entries.end()));
+            }
+            cachedPath = cache;
+            cachedEntries = entries;
+            return entries;
+        }
+        for (const auto& file : QDir(local).entryList({"*.kicad_sym"}, QDir::Files, QDir::Name)) {
+            auto library = loadKiCadLibrary(QDir(local).filePath(file));
+            entries.insert(entries.end(), std::make_move_iterator(library.entries.begin()),
+                           std::make_move_iterator(library.entries.end()));
+        }
+        // Version 10 also distributes one symbol per file, grouped in .kicad_symdir directories.
+        // Combine each category before resolving inherited symbols.
+        for (const auto& folder :
+             QDir(local).entryList({"*.kicad_symdir"}, QDir::Dirs, QDir::Name)) {
+            QString combined = "(kicad_symbol_lib ";
+            QDir category(QDir(local).filePath(folder));
+            for (const auto& file : category.entryList({"*.kicad_sym"}, QDir::Files, QDir::Name)) {
+                QFile input(category.filePath(file));
+                if (!input.open(QIODevice::ReadOnly))
+                    continue;
+                auto text = QString::fromUtf8(input.readAll());
+                auto begin = text.indexOf("(symbol ");
+                auto end = text.lastIndexOf(')');
+                if (begin >= 0 && end > begin)
+                    combined += text.mid(begin, end - begin);
+            }
+            combined += ")";
+            auto library = loadKiCadLibraryText(combined, QFileInfo(folder).completeBaseName());
+            entries.insert(entries.end(), std::make_move_iterator(library.entries.begin()),
+                           std::make_move_iterator(library.entries.end()));
+        }
+        if (!entries.empty())
+            return entries;
+    }
     for (const auto& name : {"Device", "Transistor_BJT", "Transistor_FET", "Connector_Generic",
                              "Regulator_Linear", "Timer"}) {
         auto library = loadKiCadLibrary(QString(":/kicad/") + name + ".kicad_sym");
