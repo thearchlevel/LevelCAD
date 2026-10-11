@@ -111,7 +111,13 @@ Connectivity graphs, net identification, basic electrical validation, and SPICE 
 
 ### 2. Electronic Component Library
 
-LevelCAD includes native components and offline imported symbol, footprint, and 3D model libraries. Compatibility depends on supported pin and geometry formats.
+LevelCAD integrates the KiCad component libraries directly into the project. The full downloaded symbol, footprint, and 3D model collections are included locally, allowing offline access without downloading individual components during use.
+
+The integration connects schematic symbols to compatible PCB footprints and associates those footprints with their referenced 3D models. Local caches support library searches and model loading, while original library files and license notices are retained in the project.
+
+Bundling the complete collections does not mean every library entry is supported by the current importer. Multi-unit symbols, stacked pins, and some complex footprint or model formats still require broader compatibility support.
+
+The libraries are credited to **KiCad Library Contributors** and distributed under their respective licenses. See [Offline component libraries](docs/local-component-libraries.md) for library organization and setup details.
 
 The current graphical interface provides the following component categories:
 
@@ -922,3 +928,4 @@ LevelCAD is not affiliated with KiCad, Altium or other commercial EDA software v
 *Built with C++. Driven by curiosity.*
 
 </div>
+
