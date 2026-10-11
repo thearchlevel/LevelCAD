@@ -1,0 +1,22 @@
+* text=auto
+
+# CMake
+CMakeLists.txt text eol=lf
+*.cmake text eol=lf
+
+# C++
+*.cpp text eol=lf
+*.hpp text eol=lf
+*.h text eol=lf
+
+# Windows
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Arquivos binários
+*.exe binary
+*.dll binary
+*.png binary
+*.jpg binary
+*.step binary
+*.wrl binary
