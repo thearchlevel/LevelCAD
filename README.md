@@ -2,919 +2,342 @@
 
 # LevelCAD
 
-### Open Source Electronic Design Automation
+### Native Electronic Design Automation
 
-**A native C++ application for electronic schematic design and real-time collaboration.**
+Schematic capture, PCB layout, 3D visualization, and real-time collaboration built with C++20 and Qt 6.
 
-![C++](https://img.shields.io/badge/C++-20-00599C?style=flat-square&logo=cplusplus&logoColor=white)
-![Qt](https://img.shields.io/badge/Qt-6-41CD52?style=flat-square&logo=qt&logoColor=white)
-![CMake](https://img.shields.io/badge/CMake-Build_System-064F8C?style=flat-square&logo=cmake&logoColor=white)
-![Platform](https://img.shields.io/badge/Platform-Windows_x64-333333?style=flat-square)
-![Status](https://img.shields.io/badge/Status-Under_Development-orange?style=flat-square)
-
-**Developed by Wenderson Dias · The Archlevel Foundation**
+**Created by Wenderson Dias**  
+**Published by The Archlevel Foundation**  
+**Made in Brazil**
 
 </div>
 
----
+## About
 
-## About LevelCAD
+LevelCAD began as an experiment in understanding how electronic CAD applications represent components and electrical connections. It now combines schematic editing, PCB development, offline libraries, and collaborative workflows in a native desktop application.
 
-LevelCAD is an experimental Electronic Design Automation (EDA) application developed primarily in C++20 using Qt 6.
-
-The project started from a simple curiosity: understanding how electronic CAD software works internally.
-
-While working with electronic circuits in KiCad, I became interested in how EDA applications represent electronic components, manage electrical connections, manipulate schematic objects and process circuit designs.
-
-Instead of only studying these concepts, I decided to implement my own CAD application.
-
-LevelCAD is the result of that experiment.
-
-The project focuses on electronic schematic design, circuit representation and real-time collaboration, with PCB development and interoperability with external circuit simulators planned for future versions.
-
-LevelCAD is primarily a learning and research project. Its long-term goal is to evolve into a reliable, extensible and community-driven EDA application.
-
----
-
-## Project Status
-
-> [!WARNING]
-> LevelCAD is currently under active development.
->
-> The application is not yet intended to replace established professional EDA software such as KiCad or Altium Designer.
->
-> Features, internal APIs, project formats and collaboration mechanisms may change as development progresses.
-
-The current development builds provide a functional graphical environment for creating and editing electronic schematics.
-
-Several advanced EDA capabilities are still experimental or planned.
-
-### Feature Overview
-
-| Feature | Status |
-|---------|--------|
-| Native desktop application | Implemented |
-| Schematic editor | Implemented |
-| Interactive 2D workspace | Implemented |
-| Component library | Initial implementation |
-| Component placement | Implemented |
-| Component selection | Implemented |
-| Component movement | Implemented |
-| Component rotation | Implemented |
-| Component duplication | Implemented |
-| Component properties | Initial implementation |
-| Wire drawing | Implemented |
-| Orthogonal wire routing | Implemented |
-| Undo / Redo | Implemented |
-| Project object explorer | Implemented |
-| Grid and zoom | Implemented |
-| Connection verification | Initial implementation |
-| Real-time collaboration | Initial implementation |
-| Self-hosted collaboration server | Initial implementation |
-| Advanced electrical rule checking | Planned |
-| SPICE netlist generation | Planned |
-| PCB layout editor | Planned |
-| PCB design rule checking | Planned |
-| Interactive PCB routing | Planned |
-| Gerber export | Planned |
-| 3D PCB visualization | Planned |
-| Linux support | Planned |
-
-Implementation status refers to the current experimental development stage and does not imply production readiness.
-
----
+The project remains under active development. Designs require engineering review before fabrication.
 
 ## Features
 
-### 1. Schematic Editor
+| Area | Available functionality |
+| --- | --- |
+| Schematic capture | Components, properties, connections, net labels, comments, editable background areas, and undo/redo |
+| Connectivity | Pin and net identification, connectivity graphs, basic electrical diagnostics, and SPICE netlists |
+| PCB layout | Footprints, copper layers, tracks, vias, interactive routing, board appearance, and basic design checks |
+| Synchronization | Component and pin mapping, electrical net synchronization, consistency checks, and board sizing |
+| 3D visualization | Component models, copper traces, pads, hole visualization, vias, camera presets, and layer inspection |
+| Collaboration | Self-hosted server, hosting from the interface, user selection labels, edit logs, host-controlled saving, and moderation |
+| Automation | GPT, Groq, and Claude integrations for proposed CAD operations, plus a local plugin manifest system |
+| Workspace | Launcher, loading screen, recoverable side panels, language selection, and project object explorer |
+| Manufacturing | Gerber, Excellon, BOM, placement files, project metadata, and export validation |
 
-LevelCAD provides an interactive graphical environment for creating electronic circuit diagrams.
+Libraries support offline use. Import compatibility depends on the symbol, footprint, and model formats supported by the current implementation.
 
-The editor allows users to place electronic components, manipulate schematic objects and create electrical connections.
+## Latest Improvements
 
-Current editing capabilities include:
+- Added assembled, exploded, transparent, and copper inspection views.
+- Added component and copper visibility controls.
+- Improved 3D depth rendering and fixed overlap artifacts.
+- Corrected pad rotation, rounded corners, and via hole visualization.
+- Added schematic-to-PCB checks for components, pins, and electrical nets.
+- Added basic automatic routing and board sizing.
+- Added manufacturing exports with project name, revision, and creator.
+- Improved manufacturing validation and error reporting.
 
-- Component placement and positioning.
-- Object selection and movement.
-- Component rotation.
-- Component duplication.
-- Object deletion.
-- Orthogonal wire drawing.
-- Grid-based navigation.
-- Interactive zoom and panning.
-- Undo and redo operations.
-- Editing component properties.
+All seven Release test suites passed during the latest validation. Manufacturing integration also passed external DRC and Gerber/Excellon checks on the tested fixture.
 
-The schematic editor is designed to evolve toward a more complete electrical representation system.
+## Technical Architecture
 
-Future improvements will focus on connectivity graphs, net identification, electrical validation and simulation interoperability.
+### Core Data Model
 
-### 2. Electronic Component Library
+The engine stores geometry using signed 64-bit integer coordinates in nanometers: 1 mm equals 1,000,000 nm. Persistent numeric IDs identify document objects independently of their display labels.
 
-LevelCAD includes an initial library of electronic components.
+Native JSON files encode coordinates and IDs as decimal strings to preserve integer precision. The schematic format is identified explicitly, and project data can include an embedded PCB and component meshes.
 
-The current graphical interface provides the following component categories:
+The core data model is separated from Qt presentation code. The desktop layer handles interaction, dialogs, network sessions, serialization adapters, and rendering.
 
-| Component | Description |
-|-----------|-------------|
-| Resistor | Electrical resistance |
-| Capacitor | Electrical capacitance |
-| Inductor | Electrical inductance |
-| Diode | Semiconductor diode |
-| LED | Light-emitting diode |
-| Ground | Ground reference |
-| Voltage Source | Electrical voltage source |
-| Current Source | Electrical current source |
-| SPST Switch | Single-pole single-throw switch |
-| 2-Pin Connector | Two-terminal electrical connector |
+### Electrical and PCB Engines
 
-Components can be selected from the library panel and placed directly into the schematic workspace.
+The connectivity engine derives electrical networks from pins, connections, junction geometry, and labels. Basic diagnostics identify conditions such as missing ground references, floating groups, and incompatible pin relationships.
 
-The component library includes a search interface to simplify component selection.
+The PCB model stores footprints, numbered pads, nets, tracks, vias, layers, board dimensions, and project metadata. Synchronization maps schematic components and pins onto physical footprints and checks their correspondence.
 
-The long-term goal is to support extensible component definitions, custom symbols, electrical pin properties and PCB footprint associations.
+Automatic routing uses a limited set of candidate paths with clearance checks. It does not provide a production-grade push-and-shove router, comprehensive high-speed constraints, or guaranteed completion.
 
-### 3. Electrical Connections
+### Rendering and Background Work
 
-Electrical connections are represented graphically through schematic wires.
+The 3D viewer projects component meshes and board geometry through a software renderer with per-pixel depth testing. Component meshes retain supported source materials. Transparent and exploded views help inspect copper and layer placement.
 
-The current editor supports orthogonal wire placement, allowing users to construct circuits using horizontal and vertical wire segments.
+Background work uses Qt Concurrent where integrated, including expensive preparation and export tasks. Mesh caching reduces repeated model parsing. Performance still depends on project size, embedded mesh complexity, and full-document collaboration messages.
 
-The system also includes an initial connection verification command.
+### AI and Extensions
 
-Future development will focus on:
+The automation interface supports user-provided API credentials for GPT, Groq, and Claude integrations. Proposed operations go through the application's command validation and review flow.
 
-- Automatic electrical net identification.
-- Pin-to-wire connectivity.
-- Junction detection.
-- Electrical network graphs.
-- Detection of disconnected terminals.
-- Detection of invalid electrical connections.
-- Electrical Rule Checking (ERC).
-- Netlist generation.
+The plugin system currently uses versioned JSON manifests defining actions. It does not execute arbitrary scripts or native plugin DLLs. A broader extension API, process isolation, richer events, and compatibility guarantees remain future work.
 
-These mechanisms are important because a schematic editor must eventually understand the electrical relationships represented by its graphical objects.
+### Repository Layout
 
-Drawing two objects in contact is not sufficient by itself to establish a reliable electrical model.
+| Directory | Responsibility |
+| --- | --- |
+| engine/core | Document objects, identities, and core data |
+| engine/connectivity | Electrical graph analysis and diagnostics |
+| engine/pcb | PCB data, synchronization, routing helpers, and checks |
+| application/desktop | Qt UI, rendering, collaboration, automation, and export integration |
+| application/server | Standalone collaboration server entry point |
+| libraries | Offline symbols, footprints, meshes, and attribution |
+| resources | Application resources and translations |
+| tests | Automated regression and integration checks |
+| packaging | Release deployment and Inno Setup installer |
+| docs | Supporting technical documentation |
 
-### 4. Real-Time Collaboration
+Some repository folders and supporting documentation describe intended modules. Their existence alone does not mean the proposed functionality is implemented.
 
-One of the main experimental features of LevelCAD is its real-time collaboration system.
+## Implementation Status and Roadmap
 
-The application is designed to allow multiple participants to work on the same schematic while connected to a shared collaboration session.
+| System | Already available | Still required |
+| --- | --- | --- |
+| Schematics | Editing, labels, comments, backgrounds, connectivity, basic diagnostics | Broader hierarchical/multi-unit support and more complete electrical rules |
+| PCB | Footprints, routing, vias, layers, synchronization, basic checks | Copper zone filling, robust arbitrary outlines, comprehensive stackups and manufacturing constraints |
+| Routing | Manual routing and limited automatic path candidates | Push-and-shove, differential pairs, length matching, and high-speed constraint handling |
+| 3D | Imported meshes, depth-tested display, copper and layer inspection | Full substrate hole geometry, richer materials, and more accurate assembly visualization |
+| Manufacturing | Gerber/Excellon integration, BOM, placement, metadata, external DRC | Broader geometry coverage, complete bottom-side workflows, and more manufacturing fixtures |
+| Collaboration | Shared state, field-level schematic merging, presence, audit, moderation | Fine-grained PCB merging, secure identities, reconnect/replay, and scalable delta transport |
+| Simulation | SPICE netlist generation | Integrated simulation execution, waveform analysis, and broader model validation |
+| Extensions | Validated JSON actions and AI proposals | Stable public extension API and isolated executable extensions |
 
-Instead of depending exclusively on a centralized online service, LevelCAD uses a self-hosted server model.
+These are development priorities rather than release-date commitments.
+## Building on Windows
 
-A participant can host the collaboration server and allow other users to connect to the shared project.
+Requirements: Visual Studio C++ tools with C++20 support, CMake, Ninja, and Qt 6 with Widgets, Network, and Concurrent modules.
 
-The collaboration system is intended to support:
+Use a Visual Studio x64 Native Tools command prompt. Adjust the Qt path to match your installation.
 
-- Shared schematic editing.
-- Synchronization of project changes.
-- Multiple connected participants.
-- Collaborative component placement.
-- Collaborative circuit editing.
-- Self-hosted development sessions.
+### Debug
 
-The project includes a separate server executable named:
-
-```text
-LevelCADServer.exe
-```
-
-The main application is distributed as:
-
-```text
-LevelCAD.exe
-```
-
-#### Collaboration Architecture
-
-Conceptually, the collaboration system follows a client-server model:
-
-```text
-                 LevelCAD Collaboration
-                          |
-                          |
-                  LevelCADServer
-                          |
-                 Shared Project State
-                          |
-             +------------+------------+
-             |                         |
-             |                         |
-        LevelCAD A                 LevelCAD B
-          Windows                    Windows
-             |                         |
-             |                         |
-        Developer A               Developer B
-             |                         |
-             +------ Synchronization --+
-```
-
-The server coordinates the collaboration session while the desktop clients provide the graphical editing environment.
-
-The exact synchronization protocol, conflict-resolution rules and network configuration are still subject to development and documentation.
-
-> [!IMPORTANT]
-> The collaboration system is experimental.
->
-> Do not expose a development server directly to the public internet without reviewing its authentication, access control and transport security.
-
-### 5. Project Object Explorer
-
-The application includes an object explorer for inspecting elements associated with the current schematic.
-
-The interface organizes schematic objects into categories such as components and wires.
-
-This provides an overview of the elements contained in the project.
-
-Component entries can display information such as:
-
-- Component reference.
-- Component value.
-- Component type.
-
-As the project evolves, the explorer may be extended to support hierarchical schematics, electrical networks and PCB-related objects.
-
-### 6. Native Graphical Interface
-
-LevelCAD uses Qt 6 to provide a native desktop interface.
-
-The application includes:
-
-- A central schematic workspace.
-- A component library panel.
-- A project object explorer.
-- Editing toolbars.
-- Application menus.
-- Dockable interface panels.
-- A dark visual theme.
-
-The interface is designed around the workflow of electronic schematic development.
-
-The application does not rely on Electron or an embedded browser for its main user interface.
-
----
-
-## Technology Stack
-
-LevelCAD is developed using modern C++ and native desktop technologies.
-
-| Technology | Purpose |
-|------------|---------|
-| C++20 | Primary programming language |
-| Qt 6 | Desktop graphical interface |
-| Qt Widgets | Native graphical components |
-| CMake | Project configuration and build system |
-| Ninja | Build execution |
-| MSVC | Windows C++ compiler |
-| Visual Studio Code | Development environment |
-| Git | Source control |
-
-### Development Environment
-
-The project has been successfully compiled in the following environment:
-
-| Component | Version |
-|-----------|---------|
-| Operating System | Windows 11 x64 |
-| Qt | 6.12.0 |
-| Compiler | MSVC 19.51 |
-| Visual Studio | 2026 Insiders |
-| CMake | 4.3.1 |
-| Ninja | 1.13.2 |
-| Language Standard | C++20 |
-
-The Windows development environment currently uses Qt libraries distributed for MSVC 2022 x64.
-
-Although the project has compiled successfully with the newer MSVC 19.51 toolchain, this compiler and Qt combination should be validated during future testing.
-
----
-
-## Software Architecture
-
-LevelCAD is being developed with a modular architecture.
-
-The main objective is to separate the application interface from the core mechanisms responsible for representing and processing electronic designs.
-
-The architecture is intended to support future development without requiring the graphical interface and the underlying CAD engine to remain tightly coupled.
-
-### Architectural Overview
-
-```text
-LevelCAD
-|
-+-- Desktop Application
-|   |
-|   +-- Main Window
-|   +-- Schematic Workspace
-|   +-- Component Library
-|   +-- Project Explorer
-|   +-- Editing Tools
-|   +-- User Interaction
-|
-+-- CAD Core
-|   |
-|   +-- Document Management
-|   +-- Object Representation
-|   +-- Geometry
-|   +-- Schematic Data
-|   +-- Editing Operations
-|   +-- Connectivity
-|
-+-- Graphics
-|   |
-|   +-- 2D Rendering
-|   +-- Grid
-|   +-- Viewport Navigation
-|   +-- Object Visualization
-|
-+-- Collaboration
-|   |
-|   +-- Client Communication
-|   +-- Session Management
-|   +-- State Synchronization
-|   +-- Collaboration Server
-|
-+-- Future Modules
-    |
-    +-- PCB Editor
-    +-- Electrical Rule Checking
-    +-- Design Rule Checking
-    +-- SPICE Integration
-    +-- Manufacturing Export
-    +-- 3D Visualization
-```
-
-This diagram describes the intended logical architecture rather than an exact listing of every source directory.
-
-### CAD Core
-
-The CAD core is responsible for representing design objects and managing the data associated with schematic documents.
-
-The architecture is intended to remain as independent as possible from the graphical interface.
-
-This separation is important for implementing features such as:
-
-- Automated design validation.
-- Circuit connectivity analysis.
-- File conversion.
-- Headless processing.
-- Command-line utilities.
-- External simulation integration.
-
-### Geometry and Coordinates
-
-Electronic CAD applications require accurate geometric representations.
-
-LevelCAD's architecture considers integer-based coordinate systems for internal geometry, reducing dependence on floating-point arithmetic for persistent positioning.
-
-The long-term geometry system is intended to support high-precision operations required by PCB design.
-
-This includes component placement, track geometry, pad positioning, vias and manufacturing clearances.
-
-### Schematic Data Model
-
-A schematic document contains objects representing electronic components and electrical connections.
-
-A simplified representation can be described as:
-
-```text
-Schematic Document
-|
-+-- Components
-|   |
-|   +-- Identifier
-|   +-- Reference
-|   +-- Value
-|   +-- Position
-|   +-- Rotation
-|   +-- Pins
-|
-+-- Wires
-|   |
-|   +-- Identifier
-|   +-- Geometry
-|   +-- Connection Points
-|
-+-- Electrical Networks
-    |
-    +-- Network Identifier
-    +-- Connected Terminals
-```
-
-This representation illustrates the data-model concepts rather than a guaranteed serialization format.
-
----
-
-## Building from Source
-
-### Requirements
-
-Before building LevelCAD, install:
-
-1. A C++20-compatible compiler.
-2. CMake.
-3. Ninja.
-4. Qt 6 with the appropriate compiler kit.
-5. Visual Studio Code or another compatible development environment.
-
-For the currently tested Windows configuration, use:
-
-```text
-C++ Compiler : MSVC
-Qt Version   : 6.12.0
-Qt Kit       : MSVC 2022 64-bit
-Build System : CMake
-Generator    : Ninja
-```
-
-The Qt compiler kit must be compatible with the compiler used to build the application.
-
-Do not mix Qt libraries compiled for MinGW with an MSVC build.
-
-### Clone the Repository
-
-Clone the project's repository and enter its root directory:
-
-```bash
-git clone <LEVELCAD_REPOSITORY_URL>
-cd LevelCAD
-```
-
-Replace `<LEVELCAD_REPOSITORY_URL>` with the actual repository address.
-
-### Configure the Build
-
-Open an x64 Native Tools Command Prompt with the MSVC environment initialized.
-
-From the project root, run:
-
-```cmd
-cmake --preset desktop-debug -DCMAKE_PREFIX_PATH="C:/Qt/6.12.0/msvc2022_64"
-```
-
-The command configures the desktop development build.
-
-If configuration succeeds, CMake generates the required build files.
-
-### Compile
-
-Run:
-
-```cmd
-cmake --build --preset desktop-debug
-```
-
-For parallel compilation:
-
-```cmd
+~~~bat
+cmake --preset desktop-debug -DCMAKE_PREFIX_PATH="C:\Qt\6.12.0\msvc2022_64"
 cmake --build --preset desktop-debug --parallel 8
-```
+ctest --test-dir build\debug --output-on-failure --timeout 180
+~~~
 
-The number of parallel build jobs can be adjusted according to the available CPU and memory resources.
+### Release
 
-### Output Files
+~~~bat
+cmake -S . -B build\release -G Ninja ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DLEVELCAD_BUILD_DESKTOP=ON ^
+  -DLEVELCAD_BUILD_TESTS=ON ^
+  -DCMAKE_PREFIX_PATH="C:\Qt\6.12.0\msvc2022_64"
 
-In the tested Debug configuration, the executables are generated under:
+cmake --build build\release --parallel 8
+ctest --test-dir build\release --output-on-failure --timeout 180
+~~~
 
-```text
-build/
-└── debug/
-    └── application/
-        └── desktop/
-            ├── LevelCAD.exe
-            └── LevelCADServer.exe
-```
+Executables:
 
-Intermediate build files and debugging symbols may also be present.
+~~~text
+build/release/application/desktop/LevelCAD.exe
+build/release/application/desktop/LevelCADServer.exe
+~~~
 
-### Running LevelCAD
-
-During development, the Qt runtime libraries must be available to the application.
-
-One option is to add the Qt binary directory to the current terminal's PATH:
-
-```cmd
-set "PATH=C:\Qt\6.12.0\msvc2022_64\bin;%PATH%"
-```
-
-Then run:
-
-```cmd
-build\debug\application\desktop\LevelCAD.exe
-```
-
-Alternatively, the required Qt runtime dependencies can be deployed beside the executable.
-
----
-
-## Deploying Qt Dependencies
-
-Qt applications typically depend on shared libraries and platform plugins.
-
-On Windows, the official `windeployqt` utility can identify and copy the necessary Qt dependencies.
-
-For a Debug build:
-
-```cmd
-"C:\Qt\6.12.0\msvc2022_64\bin\windeployqt.exe" --debug "build\debug\application\desktop\LevelCAD.exe"
-```
-
-The deployed application directory may include:
-
-```text
-LevelCAD.exe
-LevelCADServer.exe
-
-Qt6Cored.dll
-Qt6Guid.dll
-Qt6Widgetsd.dll
-
-platforms/
-    qwindowsd.dll
-```
-
-Additional libraries and plugin directories depend on the modules used by the application.
-
-The Debug runtime libraries use the `d` suffix.
-
-For public distribution, a Release build should be created and deployed using the corresponding Release libraries.
-
----
+Make Qt DLLs available through PATH or deploy them with windeployqt before running the application.
 
 ## Windows Installer
 
-LevelCAD is being prepared for distribution through a Windows installer.
+Install Inno Setup 6 or 7, then run from the repository root:
 
-The Windows packaging workflow uses Inno Setup to create a conventional installation package.
+~~~bat
+packaging\build-setup.bat
+~~~
 
-The intended installer provides:
+The script builds Release, runs tests, deploys Qt dependencies, and packages the application with local libraries, models, resources, and documentation.
 
-- Application installation.
-- Start Menu shortcuts.
-- Optional desktop shortcut.
-- Qt runtime dependencies.
-- Uninstallation support.
+Installers are written to <code>dist/setup</code>. Distribute the executable together with every generated <code>.bin</code> file.
 
-The package should contain the main LevelCAD application and the collaboration server when the server is included in the selected release.
+Opening <code>packaging/LevelCAD.iss</code> directly uses the prepared <code>dist/LevelCAD</code> distribution when StageDir is not supplied. Use the batch script to prepare an updated release first.
 
-Public releases should be built in Release mode and tested on systems without a development environment installed.
+## PCB and Manufacturing Workflow
 
----
+1. Create or import a schematic and review its connections.
+2. Assign compatible physical footprints.
+3. Synchronize the PCB and verify pin-to-pad mapping.
+4. Arrange components, configure layers, and complete routing.
+5. Inspect the board and copper in 3D.
+6. Run design checks before exporting manufacturing files.
 
-## Using the Schematic Editor
+Manufacturing export uses an installed kicad-cli for Gerber, Excellon, and external DRC processing. Editing and 3D visualization do not require this tool.
 
-### Basic Workflow
+See [PCB fabrication](docs/pcb-fabrication.md) for supported geometry and export requirements.
 
-A typical schematic editing workflow consists of:
+## Collaboration
 
-1. Open LevelCAD.
-2. Create or open a schematic document.
-3. Select an electronic component from the library.
-4. Place the component in the workspace.
-5. Adjust its position and orientation.
-6. Connect terminals using the wire tool.
-7. Edit component values and properties.
-8. Check the connections.
-9. Save the project.
+LevelCAD includes a self-hosted client/server collaboration system. The server maintains the authoritative project state, validates submitted edits, and distributes accepted changes to connected desktop clients.
 
-The available commands and their behavior may change as the editor evolves.
+### Hosting and Joining
 
-### Keyboard Shortcuts
+- Start a hosted session from the desktop interface, or run the separate collaboration server.
+- Choose a TCP port and share the IPv4 address of the network interface reachable by participants.
+- Participants enter the host address, port, and a display name.
+- The first valid project submitted to an empty session initializes its shared state.
+- Later participants receive the server's project instead of replacing it with their local document.
+- During collaboration, the host is responsible for saving the project's working file. The server also maintains its own session snapshot and edit log.
 
-The current graphical interface provides the following shortcuts:
+The standalone server accepts a port and an optional session directory:
 
-| Shortcut | Action |
-|----------|--------|
-| `S` | Selection tool |
-| `P` | Pan / move view |
-| `W` | Orthogonal wire tool |
-| `R` | Rotate selection |
-| `F` | Fit drawing |
-| `F8` | Verify connections |
-| `Esc` | Cancel active tool |
-| `Ctrl + D` | Duplicate selection |
-| `Delete` | Delete selected object |
-| Double-click | Open object properties |
+~~~bat
+LevelCADServer.exe 45454 "C:\LevelCAD-sessions\MyProject"
+~~~
 
-Mouse-wheel interaction is used for viewport zoom.
+Without a port argument, it prompts for a port; the default is 45454. It lists available IPv4 addresses at startup.
 
-These shortcuts correspond to the current experimental editor and may be refined in future versions.
+### Transport and Protocol
 
----
+The implementation uses Qt Network: QTcpServer on the server and QTcpSocket on each client. Messages are compact JSON objects separated by newline characters over a TCP connection.
 
-## Collaboration Workflow
+The current handshake identifies protocol version 1. Message categories include:
 
-LevelCAD includes a separate application for hosting collaborative sessions.
+| Message | Purpose |
+| --- | --- |
+| hello / welcome | Negotiate the session and deliver the authoritative document |
+| edit | Submit an edited document together with its baseline |
+| state | Broadcast the accepted document and associated audit entries |
+| conflict | Reject conflicting changes and return the current document |
+| presence | Share selected object IDs and the active workspace |
+| roster | Update connected participants and host moderation information |
+| admin / denied | Process moderation requests or report access rejection |
 
-The collaboration system is designed around a self-hosted model.
+The receiver applies a 64 MiB buffer limit. This is a basic resource bound, not a complete solution for large embedded model transfers or abusive clients.
 
-### General Workflow
+Each participant receives an actor identifier and a separate object ID range. The server verifies that newly created schematic objects belong to the submitting actor's range.
 
-```text
-Host
- |
- +-- Start LevelCADServer
- |
- +-- Open LevelCAD
- |
- +-- Create or join the hosted session
- |
- +-- Share connection information
- |
- +-- Collaborators connect
- |
- +-- Shared schematic editing
-```
+### Concurrent Editing and Conflict Handling
 
-Actual server configuration, supported network transports and connection parameters depend on the implementation version.
+Schematic merging covers the symbols, wires, and notes collections. Objects are matched by persistent ID.
 
-### Networking Considerations
+For an edited field, the server compares the submitted baseline with its current value. Independent field changes can merge. If another participant has already changed the same field, or an object has been deleted or replaced, the submission is rejected rather than silently overwriting that change.
 
-For collaboration between computers on different networks, the host must provide a reachable network endpoint.
+Changes are first applied to a candidate document and validated. The candidate replaces the shared state only after successful validation.
 
-Depending on the network environment, this may require VPN connectivity, firewall configuration or other networking arrangements.
+PCB editing currently has coarser conflict handling: the embedded PCB layout is merged as one block. Two simultaneous PCB modifications can conflict even when they affect different footprints or tracks. Per-object PCB merging remains future work.
 
-Because the collaboration subsystem is still under development, security and access-control mechanisms should be reviewed before exposing it to untrusted networks.
+When a conflict occurs, the client writes its submitted document to a temporary recovery file named like:
 
----
+~~~text
+LevelCAD-conflict-<actor>.levelsch
+~~~
 
-## External Circuit Simulation
+It then receives the authoritative server state. The recovery file allows manual inspection of the rejected proposal; it is not an automatic conflict-resolution interface.
 
-One of the long-term objectives of LevelCAD is interoperability with external electronic circuit simulators.
+### Presence and Selection
 
-Instead of implementing a complete analog simulation engine from scratch, the project intends to support the generation of circuit representations compatible with established simulation tools.
+Selection messages carry the workspace name and selected object IDs. Desktop views use this information to display participant labels on selected objects.
 
-### Planned SPICE Integration
+Presence is separate from persistent circuit geometry. It shows activity without adding annotations to the saved schematic. Selection visibility does not provide object locking or exclusive ownership.
 
-The intended workflow is:
+### Audit Trail and Persistence
 
-```text
-Electronic Schematic
-        |
-        v
-Electrical Connectivity
-        |
-        v
-Circuit Netlist
-        |
-        v
-SPICE-Compatible Output
-        |
-        v
-External Circuit Simulator
-        |
-        v
-Simulation Results
-```
+The server maintains these files in its session directory:
 
-SPICE-based tools, such as ngspice, are potential integration targets.
+| File | Contents |
+| --- | --- |
+| project.levelsch | Current shared project snapshot |
+| edits.jsonl | Append-only JSON audit entries |
+| blocked.json | Persisted blocked addresses |
 
-Future development may support:
+Accepted schematic changes record the collection, object ID, field, and previous/new values where applicable. Audit entries also include the display name, actor/session ID, UTC timestamp, and server revision.
 
-- Circuit netlist generation.
-- Component-to-model mapping.
-- Voltage and current analysis.
-- Transient simulation.
-- DC operating-point analysis.
-- AC frequency analysis.
+PCB changes are logged as a layout update rather than individual track or pad edits. Display names identify session participants but are not verified user identities.
 
-These capabilities are planned and are not part of the currently documented stable feature set.
+Project snapshots use QSaveFile for atomic file replacement. The audit log is appended separately; snapshot and log writes are not a single transactional database operation.
 
----
+### Host Controls
 
-## PCB Development
+The desktop host can inspect participants, disconnect a selected participant, block their address, and remove an address from the block list.
 
-PCB design is one of the primary long-term development goals of LevelCAD.
+Administrative access requires the configured host token and a loopback connection. Ordinary participants cannot issue accepted host moderation commands.
 
-The intended PCB subsystem will transform schematic connectivity information into a physical board layout.
+Blocking is address-based, not account-based. Participants sharing an address can be affected together, and an address change can bypass an existing block. Standalone server startup currently does not expose the desktop host's token-management workflow.
 
-### Planned Features
+### Current Networking Scope
 
-- PCB board editor.
-- Footprint placement.
-- Copper track routing.
-- Multiple copper layers.
-- Through-hole and surface-mount components.
-- Vias.
-- Copper zones.
-- Ground planes.
-- Board outlines.
-- Design Rule Checking (DRC).
-- Manufacturing file generation.
+The current transport is plain TCP. TLS encryption, verified accounts, room passwords, role-based editing permissions, and public relay services are not implemented.
 
-### Manufacturing Outputs
+LAN operation requires a reachable host address and a firewall rule allowing the chosen TCP port. Internet operation additionally needs suitable routing or a private network tunnel; the application does not automatically traverse NAT or configure port forwarding.
 
-Future export capabilities may include:
+### Collaboration Work Still Required
 
-| Format | Purpose |
-|--------|---------|
-| Gerber | PCB copper and manufacturing layers |
-| Excellon | PCB drilling information |
-| BOM | Bill of materials |
-| STEP | Mechanical integration and 3D models |
+- Per-object and per-field PCB merging.
+- Delta-based updates instead of transmitting complete document snapshots.
+- Automatic reconnection, queued offline edits, and deterministic replay.
+- A conflict review interface with selective recovery.
+- TLS, authenticated identities, access permissions, and room admission controls.
+- Transactional persistence, backup rotation, and explicit disk-write failure recovery.
+- Multi-room hosting, relay support, rate limiting, and larger-session stress testing.
+- A documented policy for collaborative undo and simultaneous object manipulation.
+## Example Design
 
-These formats are not yet guaranteed to be supported by the current implementation.
+The separately generated **ATLAS S3** example contains 163 components, embedded models, and a four-layer PCB concept based on the ESP32-S3.
 
----
+The example still has 58 unrouted connections. Complete routing and review power, antenna clearance, signal integrity, and component requirements before fabrication.
 
 ## Current Limitations
 
-LevelCAD is still an experimental EDA application.
+- Automatic routing and electrical/design checks remain basic.
+- Some imported symbols, footprints, and model formats are unsupported.
+- Manufacturing export supports a subset of geometry; custom outlines and complete bottom-side assembly workflows are not yet supported.
+- Hole visualization does not simulate full substrate cutouts or solder geometry.
+- AI proposals require review and do not establish electrical correctness.
+- Project formats and internal APIs may change.
 
-The following limitations should be considered:
+## Documentation
 
-**Electrical connectivity**
-
-The current connection verification functionality should not be treated as a complete professional ERC implementation.
-
-**Component movement**
-
-In the demonstrated development build, moving a component does not automatically move or reconnect its attached wires.
-
-Connections may need to be adjusted manually after changing component positions.
-
-**Simulation**
-
-Automatic generation of simulation-ready SPICE netlists is still planned.
-
-**PCB development**
-
-The PCB editor and manufacturing export subsystem are not yet part of the functional feature set.
-
-**Collaboration**
-
-The real-time collaboration system is experimental and may require further work on synchronization, reconnection, access control and concurrent editing.
-
-**Project compatibility**
-
-Project and document formats may change before the first stable release.
-
----
-
-## Development Roadmap
-
-### Phase 1 — Foundation
-
-Establish the initial native CAD application.
-
-- [x] C++20 project foundation
-- [x] CMake build environment
-- [x] Qt 6 desktop application
-- [x] 2D schematic workspace
-- [x] Component placement
-- [x] Basic electronic symbols
-- [x] Interactive navigation
-
-### Phase 2 — Schematic Editing
-
-Improve schematic editing and object manipulation.
-
-- [x] Component library interface
-- [x] Component search
-- [x] Orthogonal wires
-- [x] Object selection
-- [x] Component movement
-- [x] Component rotation
-- [x] Undo and redo
-- [x] Object explorer
-- [ ] Automatic wire reconnection
-- [ ] Advanced symbol editor
-- [ ] Hierarchical schematics
-
-### Phase 3 — Collaboration
-
-Expand the experimental collaboration subsystem.
-
-- [x] Initial collaboration server
-- [x] Initial real-time collaboration
-- [ ] Advanced concurrent editing
-- [ ] Conflict-resolution improvements
-- [ ] Session permissions
-- [ ] Reconnection and recovery
-- [ ] Collaboration testing
-- [ ] Security hardening
-
-### Phase 4 — Electrical Connectivity
-
-Develop the electrical interpretation engine.
-
-- [ ] Complete connectivity graph
-- [ ] Pin-based network identification
-- [ ] Electrical junction validation
-- [ ] Advanced ERC
-- [ ] Netlist generation
-- [ ] SPICE interoperability
-
-### Phase 5 — PCB Development
-
-Implement the PCB design environment.
-
-- [ ] PCB editor
-- [ ] Footprint library
-- [ ] Copper layers
-- [ ] Manual track routing
-- [ ] Via placement
-- [ ] Copper zones
-- [ ] Design Rule Checking
-- [ ] Manufacturing exports
-
-### Phase 6 — Advanced EDA
-
-Explore more advanced design capabilities.
-
-- [ ] 3D PCB visualization
-- [ ] External circuit simulation workflow
-- [ ] Advanced project organization
-- [ ] Custom component libraries
-- [ ] Extended platform support
-- [ ] Improved automation capabilities
-
-The roadmap is experimental and may change according to research priorities and project development.
-
----
-
-## Development Philosophy
-
-LevelCAD is primarily a project about learning through implementation.
-
-The objective is not simply to reproduce the interface of existing CAD applications.
-
-The interesting part is understanding the mechanisms underneath:
-
-- How electronic components are represented.
-- How schematic objects are transformed.
-- How electrical connections are identified.
-- How circuit data is stored.
-- How multiple users can edit a shared document.
-- How CAD software maintains geometric precision.
-- How a schematic becomes a physical PCB.
-- How electrical models can be exported for simulation.
-
-Implementing these systems provides an opportunity to study C++, software architecture, computational geometry, graphical interfaces, networking and electronic engineering.
-
-The project is intended to remain useful as a learning resource even while its professional CAD capabilities are still incomplete.
-
----
+- [Architecture](docs/ARCHITECTURE.md)
+- [File format](docs/FILE_FORMAT.md)
+- [Offline component libraries](docs/local-component-libraries.md)
+- [PCB fabrication](docs/pcb-fabrication.md)
+- [Roadmap](docs/ROADMAP.md)
 
 ## Contributing
 
-Contributions, bug reports and technical discussions are welcome as the source code becomes publicly available.
+Bug reports, reproducible examples, documentation improvements, and code contributions are welcome. Discuss significant architectural changes before implementation.
 
-Potential contribution areas include:
+Areas for improvement include validation, routing, import compatibility, rendering, collaboration, and manufacturing tests.
 
-- C++ software architecture.
-- Qt desktop development.
-- Computational geometry.
-- Electronic schematic modeling.
-- Electrical connectivity.
-- PCB design algorithms.
-- Real-time communication.
-- Automated testing.
-- Documentation.
+## License and Credits
 
-Before making significant architectural changes, contributors should discuss the intended implementation and its impact on the existing project.
+### Project
 
-As the public repository matures, contribution guidelines and development standards will be documented in `CONTRIBUTING.md`.
+**Creator and developer: Wenderson Dias.**  
+**Publisher: The Archlevel Foundation.**  
+**Origin: Brazil.**
 
----
+LevelCAD is an independent electronic design automation project. Its goal is to develop practical CAD tools while making the architecture and implementation accessible for study and contribution.
 
-## Open Source and Licensing
+### Source License
 
-LevelCAD is intended to be an open-source project.
+The repository includes the GNU General Public License, version 3. Read [LICENSE](LICENSE) for the terms distributed with this source tree.
 
-The public source distribution and its licensing terms will be defined as the repository is prepared for its first stable source release.
+Bundled third-party assets and dependencies retain their own licenses. The application's source license does not replace those terms.
 
-The final license must be explicitly published in a `LICENSE` file.
+### Component Libraries and Assets
 
-Until that license is published, no specific redistribution or modification rights should be assumed solely from the project's open-source intentions.
+**KiCad Library Contributors** are credited for the symbol, footprint, and component model libraries used by the project. Library license files and attribution notices are retained with the local distribution.
 
-Third-party dependencies, including Qt, remain subject to their respective licenses.
+Additional model assets, including bundled SparkFun-derived assets where present, retain their original attribution and license notices. Consult the relevant library directories before redistributing assets separately.
 
----
+### Technology and Tooling
 
-## Authors and Credits
+- **Qt Project and contributors:** desktop UI, networking, and concurrent tasks.
+- **CMake and Ninja contributors:** build configuration and execution.
+- **Inno Setup contributors:** Windows installer tooling.
+- **External fabrication tooling:** manufacturing conversion and DRC integration.
 
-**LevelCAD**
+AI services are optional integrations accessed through user-provided credentials. Their providers' service terms apply independently.
 
-Developed by **Wenderson Dias**.
+### Contributors
 
-Published under **The Archlevel Foundation**.
+Bug reports, reproducible test cases, documentation, and code contributions help improve the project. Specific contributor acknowledgments can be added as contributions are accepted.
 
-The project is an independent initiative focused on exploring electronic design automation through practical software development.
-
-LevelCAD is not affiliated with KiCad, Altium or other commercial EDA software vendors.
-
----
-
-<div align="center">
-
-### LevelCAD
-
-**From Silicon to Software.**
-
-*Built with C++. Driven by curiosity.*
-
-</div>
+Library and technology attribution does not imply affiliation, endorsement, or sponsorship.
