@@ -118,21 +118,6 @@ Bundling the complete collections does not mean every library entry is supported
 
 The libraries are credited to **KiCad Library Contributors** and distributed under their respective licenses. See [Offline component libraries](docs/local-component-libraries.md) for library organization and setup details.
 
-The current graphical interface provides the following component categories:
-
-| Component | Description |
-|-----------|-------------|
-| Resistor | Electrical resistance |
-| Capacitor | Electrical capacitance |
-| Inductor | Electrical inductance |
-| Diode | Semiconductor diode |
-| LED | Light-emitting diode |
-| Ground | Ground reference |
-| Voltage Source | Electrical voltage source |
-| Current Source | Electrical current source |
-| SPST Switch | Single-pole single-throw switch |
-| 2-Pin Connector | Two-terminal electrical connector |
-
 Components can be selected from the library panel and placed directly into the schematic workspace.
 
 The component library includes a search interface to simplify component selection.
