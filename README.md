@@ -12,8 +12,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows_x64-333333?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Under_Development-orange?style=flat-square)
 
-**Developed by Wenderson Dias · The Archlevel Foundation**
-
+**Developed by Wenderson Dias**
 </div>
 
 ---
