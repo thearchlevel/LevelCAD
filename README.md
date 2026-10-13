@@ -416,11 +416,9 @@ Do not mix Qt libraries compiled for MinGW with an MSVC build.
 Clone the project's repository and enter its root directory:
 
 ```bash
-git clone <LEVELCAD_REPOSITORY_URL>
+git clone https://github.com/wendersondiazx/LevelCAD
 cd LevelCAD
 ```
-
-Replace `<LEVELCAD_REPOSITORY_URL>` with the actual repository address.
 
 ### Configure the Build
 
